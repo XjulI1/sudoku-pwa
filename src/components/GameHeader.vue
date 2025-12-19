@@ -5,6 +5,10 @@ import { Difficulty } from '@/types/sudoku'
 
 const store = useSudokuStore()
 
+const emit = defineEmits<{
+  newGame: []
+}>()
+
 const difficultyLabel = computed(() => {
   switch (store.difficulty) {
     case Difficulty.SIMPLE:
@@ -59,6 +63,7 @@ const progressPercent = computed(() => Math.round(store.progress))
       >
         ⏸️ Pause
       </button>
+      <button class="header-btn" @click="emit('newGame')">🔄 Nouvelle partie</button>
     </div>
 
     <div v-if="store.isCompleted" class="completion-message">

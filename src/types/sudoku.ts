@@ -34,3 +34,26 @@ export interface Position {
   row: number
   col: number
 }
+
+export interface GameStats {
+  difficulty: Difficulty
+  completionTime: number // en millisecondes
+  errorsCount: number
+  hintsUsed: number
+  notesUsed: number
+  pauseTime: number // en millisecondes
+  score: number // note sur 10
+  completedAt: number // timestamp
+}
+
+export interface DifficultyStats {
+  difficulty: Difficulty
+  gamesPlayed: number
+  averageTime: number
+  averageScore: number
+  bestScore: number
+  bestTime: number
+  totalErrors: number
+  totalHints: number
+  history: GameStats[]
+}

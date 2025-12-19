@@ -5,9 +5,13 @@ import DifficultySelector from '@/components/DifficultySelector.vue'
 import GameHeader from '@/components/GameHeader.vue'
 import SudokuGrid from '@/components/SudokuGrid.vue'
 import GameControls from '@/components/GameControls.vue'
+import Statistics from '@/components/Statistics.vue'
+import ConfirmModal from '@/components/ConfirmModal.vue'
 
 const store = useSudokuStore()
 const showMenu = ref(false)
+const showStats = ref(false)
+const showConfirmNewGame = ref(false)
 
 const hasActiveGame = computed(() => store.grid.length > 0)
 
@@ -20,34 +24,49 @@ onMounted(() => {
 })
 
 const startNewGameFromMenu = () => {
-  if (
-    hasActiveGame.value &&
-    !confirm('Voulez-vous vraiment commencer une nouvelle partie ? La partie en cours sera perdue.')
-  ) {
-    return
+  if (hasActiveGame.value) {
+    showConfirmNewGame.value = true
+  } else {
+    confirmNewGame()
   }
+}
+
+const confirmNewGame = () => {
   store.resetGame()
   showMenu.value = true
+}
+
+const openStats = () => {
+  showStats.value = true
+}
+
+const closeStats = () => {
+  showStats.value = false
 }
 </script>
 
 <template>
   <div class="app">
     <div v-if="showMenu || !hasActiveGame" class="menu-view">
-      <DifficultySelector @start="showMenu = false" />
+      <DifficultySelector @start="showMenu = false" @show-stats="openStats" />
     </div>
 
     <div v-else class="game-view">
-      <GameHeader />
+      <GameHeader @new-game="startNewGameFromMenu" />
       <SudokuGrid />
       <GameControls />
-
-      <div class="game-actions">
-        <button class="secondary-btn" @click="startNewGameFromMenu">
-          🔄 Nouvelle partie
-        </button>
-      </div>
     </div>
+
+    <Statistics v-if="showStats" @close="closeStats" />
+
+    <ConfirmModal
+      v-model="showConfirmNewGame"
+      title="Nouvelle partie"
+      message="Voulez-vous vraiment commencer une nouvelle partie ? La partie en cours sera perdue."
+      confirm-text="Nouvelle partie"
+      cancel-text="Annuler"
+      @confirm="confirmNewGame"
+    />
   </div>
 </template>
 
@@ -68,9 +87,11 @@ const startNewGameFromMenu = () => {
 
   /* Backgrounds */
   --bg: #f9fafb;
+  --bg-primary: #f9fafb;
   --header-bg: #ffffff;
   --card-bg: #ffffff;
   --card-hover: #f3f4f6;
+  --text-primary: #1f2937;
 
   /* Cellules */
   --cell-bg: #ffffff;
@@ -111,9 +132,11 @@ const startNewGameFromMenu = () => {
 
     /* Backgrounds */
     --bg: #111827;
+    --bg-primary: #111827;
     --header-bg: #1f2937;
     --card-bg: #1f2937;
     --card-hover: #374151;
+    --text-primary: #f9fafb;
 
     /* Cellules */
     --cell-bg: #1f2937;
@@ -176,39 +199,5 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-}
-
-.game-actions {
-  padding: 1rem;
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.secondary-btn {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  border: 2px solid var(--border-light);
-  background-color: var(--btn-bg);
-  color: var(--text);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.secondary-btn:hover {
-  background-color: var(--btn-hover);
-}
-
-@media (max-width: 640px) {
-  .game-actions {
-    padding: 0.5rem;
-  }
-
-  .secondary-btn {
-    font-size: 0.875rem;
-    padding: 0.625rem 1.25rem;
-  }
 }
 </style>

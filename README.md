@@ -20,6 +20,13 @@ Un jeu de Sudoku moderne développé avec Vue 3, TypeScript et configuré comme 
 ### Fonctionnalités supplémentaires
 
 - **Chronomètre** : Suivez votre temps de résolution
+- **Statistiques complètes** :
+  - Historique des parties par niveau de difficulté
+  - Système de notation sur 10 (pondération : erreurs > indices > temps > pause)
+  - Temps moyen et meilleur temps
+  - Note moyenne et meilleure note
+  - Compteurs d'erreurs, d'indices et de notes utilisées
+  - Temps de pause enregistré
 - **Sauvegarde automatique** : Votre progression est sauvegardée dans le localStorage
 - **Mode sombre automatique** : S'adapte aux préférences système
 - **PWA** : Installez l'application sur votre appareil et jouez hors ligne

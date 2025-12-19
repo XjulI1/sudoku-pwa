@@ -8,6 +8,7 @@ const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
 
 const emit = defineEmits<{
   start: []
+  showStats: []
 }>()
 
 const difficulties = [
@@ -25,6 +26,10 @@ const difficulties = [
 const startNewGame = () => {
   store.newGame(selectedDifficulty.value)
   emit('start')
+}
+
+const openStats = () => {
+  emit('showStats')
 }
 </script>
 
@@ -55,6 +60,7 @@ const startNewGame = () => {
     </div>
 
     <button class="start-btn" @click="startNewGame">Commencer</button>
+    <button class="stats-btn" @click="openStats">📊 Voir les statistiques</button>
   </div>
 </template>
 
@@ -161,6 +167,25 @@ h2 {
 
 .start-btn:active {
   transform: translateY(0);
+}
+
+.stats-btn {
+  width: 100%;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 2px solid var(--border-light);
+  background-color: var(--btn-bg);
+  color: var(--text);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.75rem;
+}
+
+.stats-btn:hover {
+  background-color: var(--btn-hover);
+  border-color: var(--primary);
 }
 
 @media (max-width: 640px) {

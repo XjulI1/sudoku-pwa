@@ -4,6 +4,7 @@ import type { Grid, Cell, Position } from '@/types/sudoku'
 import { Difficulty } from '@/types/sudoku'
 import { SudokuGenerator } from '@/utils/sudokuGenerator'
 import { SudokuValidator } from '@/utils/sudokuValidator'
+import { StatsManager } from '@/utils/statsManager'
 
 const STORAGE_KEY = 'sudoku-game-state'
 
@@ -20,6 +21,10 @@ export const useSudokuStore = defineStore('sudoku', () => {
   const selectedCell = ref<Position | null>(null)
   const noteMode = ref(false)
   const showErrors = ref(true)
+  const errorsCount = ref(0)
+  const notesUsed = ref(0)
+  const totalPauseTime = ref(0)
+  const lastPauseStart = ref<number | null>(null)
 
   // Timer
   let timerInterval: number | null = null
@@ -87,6 +92,10 @@ export const useSudokuStore = defineStore('sudoku', () => {
     hintsUsed.value = 0
     selectedCell.value = null
     noteMode.value = false
+    errorsCount.value = 0
+    notesUsed.value = 0
+    totalPauseTime.value = 0
+    lastPauseStart.value = null
 
     startTimer()
     saveGame()
@@ -106,10 +115,15 @@ export const useSudokuStore = defineStore('sudoku', () => {
 
   function pauseGame() {
     isPaused.value = true
+    lastPauseStart.value = Date.now()
   }
 
   function resumeGame() {
     isPaused.value = false
+    if (lastPauseStart.value !== null) {
+      totalPauseTime.value += Date.now() - lastPauseStart.value
+      lastPauseStart.value = null
+    }
     startTime.value = Date.now() - elapsedTime.value
   }
 
@@ -151,8 +165,16 @@ export const useSudokuStore = defineStore('sudoku', () => {
   function setCellValue(row: number, col: number, value: number | null) {
     if (grid.value[row]![col]!.isInitial || isCompleted.value) return
 
-    grid.value[row]![col]!.value = value
-    grid.value[row]![col]!.notes.clear()
+    const cell = grid.value[row]![col]!
+    const hadNotes = cell.notes.size > 0
+
+    cell.value = value
+    cell.notes.clear()
+
+    // Compter les notes utilisées (nombre total de notes ajoutées)
+    if (hadNotes) {
+      notesUsed.value += 1
+    }
 
     updateErrors()
     checkCompletion()
@@ -169,6 +191,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
       cell.notes.delete(note)
     } else {
       cell.notes.add(note)
+      notesUsed.value += 1
     }
 
     saveGame()
@@ -211,15 +234,25 @@ export const useSudokuStore = defineStore('sudoku', () => {
       return
     }
 
+    let currentErrors = 0
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {
         const cell = grid.value[row]![col]!
         if (cell.value !== null && !cell.isInitial) {
-          cell.isError = !SudokuValidator.isValidMove(grid.value, row, col, cell.value)
+          const isError = !SudokuValidator.isValidMove(grid.value, row, col, cell.value)
+          cell.isError = isError
+          if (isError) {
+            currentErrors++
+          }
         } else {
           cell.isError = false
         }
       }
+    }
+
+    // Mettre à jour le compteur d'erreurs (accumule les erreurs)
+    if (currentErrors > errorsCount.value) {
+      errorsCount.value = currentErrors
     }
   }
 
@@ -231,6 +264,16 @@ export const useSudokuStore = defineStore('sudoku', () => {
         if (timerInterval !== null) {
           clearInterval(timerInterval)
         }
+
+        // Enregistrer les statistiques de la partie
+        StatsManager.saveGameStats(
+          difficulty.value,
+          elapsedTime.value,
+          errorsCount.value,
+          hintsUsed.value,
+          notesUsed.value,
+          totalPauseTime.value
+        )
       }
     }
   }
@@ -279,7 +322,10 @@ export const useSudokuStore = defineStore('sudoku', () => {
       startTime: startTime.value,
       elapsedTime: elapsedTime.value,
       isCompleted: isCompleted.value,
-      hintsUsed: hintsUsed.value
+      hintsUsed: hintsUsed.value,
+      errorsCount: errorsCount.value,
+      notesUsed: notesUsed.value,
+      totalPauseTime: totalPauseTime.value
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }
@@ -303,6 +349,9 @@ export const useSudokuStore = defineStore('sudoku', () => {
       elapsedTime.value = state.elapsedTime
       isCompleted.value = state.isCompleted
       hintsUsed.value = state.hintsUsed
+      errorsCount.value = state.errorsCount || 0
+      notesUsed.value = state.notesUsed || 0
+      totalPauseTime.value = state.totalPauseTime || 0
       isPaused.value = false
       selectedCell.value = null
 
@@ -331,6 +380,10 @@ export const useSudokuStore = defineStore('sudoku', () => {
     hintsUsed.value = 0
     selectedCell.value = null
     noteMode.value = false
+    errorsCount.value = 0
+    notesUsed.value = 0
+    totalPauseTime.value = 0
+    lastPauseStart.value = null
     localStorage.removeItem(STORAGE_KEY)
   }
 
@@ -347,6 +400,9 @@ export const useSudokuStore = defineStore('sudoku', () => {
     selectedCell,
     noteMode,
     showErrors,
+    errorsCount,
+    notesUsed,
+    totalPauseTime,
 
     // Computed
     formattedTime,
