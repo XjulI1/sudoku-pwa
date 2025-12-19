@@ -84,7 +84,8 @@ if (typeof window !== 'undefined') {
 
 .number-btn {
   aspect-ratio: 1;
-  font-size: clamp(1rem, 3vw, 1.5rem);
+  min-height: 48px;
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
   font-weight: 600;
   border: 2px solid var(--border-light);
   background-color: var(--btn-bg);
@@ -92,6 +93,7 @@ if (typeof window !== 'undefined') {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  touch-action: manipulation;
 }
 
 .number-btn:hover:not(:disabled) {
@@ -158,11 +160,22 @@ if (typeof window !== 'undefined') {
   }
 
   .number-pad {
-    gap: 0.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .number-btn {
+    min-height: 52px;
+    flex: 0 0 calc((100% - 2rem) / 5);
+  }
+
+  .number-btn:nth-child(6) {
+    margin-left: calc((100% - 2rem) / 10);
   }
 
   .action-buttons {
-    gap: 0.25rem;
+    gap: 0.375rem;
   }
 
   .action-btn {
