@@ -1,0 +1,370 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import type { Grid, Cell, Position } from '@/types/sudoku'
+import { Difficulty } from '@/types/sudoku'
+import { SudokuGenerator } from '@/utils/sudokuGenerator'
+import { SudokuValidator } from '@/utils/sudokuValidator'
+
+const STORAGE_KEY = 'sudoku-game-state'
+
+export const useSudokuStore = defineStore('sudoku', () => {
+  // État
+  const grid = ref<Grid>([])
+  const solution = ref<number[][]>([])
+  const difficulty = ref<Difficulty>(Difficulty.NORMAL)
+  const startTime = ref<number>(0)
+  const elapsedTime = ref<number>(0)
+  const isCompleted = ref(false)
+  const isPaused = ref(false)
+  const hintsUsed = ref(0)
+  const selectedCell = ref<Position | null>(null)
+  const noteMode = ref(false)
+  const showErrors = ref(true)
+
+  // Timer
+  let timerInterval: number | null = null
+
+  // Computed
+  const formattedTime = computed(() => {
+    const totalSeconds = Math.floor(elapsedTime.value / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  })
+
+  const progress = computed(() => {
+    let filled = 0
+    let total = 0
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (!grid.value[row]![col]!.isInitial) {
+          total++
+          if (grid.value[row]![col]!.value !== null) {
+            filled++
+          }
+        }
+      }
+    }
+    return total > 0 ? (filled / total) * 100 : 0
+  })
+
+  // Initialisation de la grille vide
+  function createEmptyGrid(): Grid {
+    return Array.from({ length: 9 }, () =>
+      Array.from({ length: 9 }, () => ({
+        value: null,
+        notes: new Set<number>(),
+        isInitial: false,
+        isError: false,
+        isHighlighted: false
+      }))
+    )
+  }
+
+  // Démarre un nouveau jeu
+  function newGame(newDifficulty: Difficulty) {
+    difficulty.value = newDifficulty
+    const generator = new SudokuGenerator()
+    const { puzzle, solution: sol } = generator.generate(newDifficulty)
+
+    solution.value = sol
+    grid.value = createEmptyGrid()
+
+    // Remplir la grille avec le puzzle
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (puzzle[row]![col] !== 0) {
+          grid.value[row]![col]!.value = puzzle[row]![col]!
+          grid.value[row]![col]!.isInitial = true
+        }
+      }
+    }
+
+    startTime.value = Date.now()
+    elapsedTime.value = 0
+    isCompleted.value = false
+    isPaused.value = false
+    hintsUsed.value = 0
+    selectedCell.value = null
+    noteMode.value = false
+
+    startTimer()
+    saveGame()
+  }
+
+  // Gestion du timer
+  function startTimer() {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval)
+    }
+    timerInterval = window.setInterval(() => {
+      if (!isPaused.value && !isCompleted.value) {
+        elapsedTime.value = Date.now() - startTime.value
+      }
+    }, 100)
+  }
+
+  function pauseGame() {
+    isPaused.value = true
+  }
+
+  function resumeGame() {
+    isPaused.value = false
+    startTime.value = Date.now() - elapsedTime.value
+  }
+
+  // Sélectionner une cellule
+  function selectCell(row: number, col: number) {
+    if (grid.value[row]![col]!.isInitial || isCompleted.value) {
+      selectedCell.value = null
+      return
+    }
+    selectedCell.value = { row, col }
+    highlightRelatedCells(row, col)
+  }
+
+  // Mettre en surbrillance les cellules liées
+  function highlightRelatedCells(row: number, col: number) {
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        grid.value[r]![c]!.isHighlighted = false
+      }
+    }
+
+    // Ligne et colonne
+    for (let i = 0; i < 9; i++) {
+      grid.value[row]![i]!.isHighlighted = true
+      grid.value[i]![col]!.isHighlighted = true
+    }
+
+    // Carré 3x3
+    const startRow = row - (row % 3)
+    const startCol = col - (col % 3)
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        grid.value[startRow + i]![startCol + j]!.isHighlighted = true
+      }
+    }
+  }
+
+  // Définir la valeur d'une cellule
+  function setCellValue(row: number, col: number, value: number | null) {
+    if (grid.value[row]![col]!.isInitial || isCompleted.value) return
+
+    grid.value[row]![col]!.value = value
+    grid.value[row]![col]!.notes.clear()
+
+    updateErrors()
+    checkCompletion()
+    saveGame()
+  }
+
+  // Basculer une note
+  function toggleNote(row: number, col: number, note: number) {
+    if (grid.value[row]![col]!.isInitial || isCompleted.value) return
+    if (grid.value[row]![col]!.value !== null) return
+
+    const cell = grid.value[row]![col]!
+    if (cell.notes.has(note)) {
+      cell.notes.delete(note)
+    } else {
+      cell.notes.add(note)
+    }
+
+    saveGame()
+  }
+
+  // Gérer l'entrée d'un nombre
+  function handleNumberInput(num: number) {
+    if (!selectedCell.value) return
+
+    const { row, col } = selectedCell.value
+    if (noteMode.value) {
+      toggleNote(row, col, num)
+    } else {
+      setCellValue(row, col, num)
+    }
+  }
+
+  // Effacer la cellule sélectionnée
+  function clearSelectedCell() {
+    if (!selectedCell.value) return
+
+    const { row, col } = selectedCell.value
+    if (grid.value[row]![col]!.isInitial) return
+
+    grid.value[row]![col]!.value = null
+    grid.value[row]![col]!.notes.clear()
+
+    updateErrors()
+    saveGame()
+  }
+
+  // Mettre à jour les erreurs
+  function updateErrors() {
+    if (!showErrors.value) {
+      for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+          grid.value[row]![col]!.isError = false
+        }
+      }
+      return
+    }
+
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        const cell = grid.value[row]![col]!
+        if (cell.value !== null && !cell.isInitial) {
+          cell.isError = !SudokuValidator.isValidMove(grid.value, row, col, cell.value)
+        } else {
+          cell.isError = false
+        }
+      }
+    }
+  }
+
+  // Vérifier si le jeu est terminé
+  function checkCompletion() {
+    if (SudokuValidator.isFilled(grid.value)) {
+      if (SudokuValidator.isComplete(grid.value, solution.value)) {
+        isCompleted.value = true
+        if (timerInterval !== null) {
+          clearInterval(timerInterval)
+        }
+      }
+    }
+  }
+
+  // Obtenir un indice
+  function getHint() {
+    if (isCompleted.value) return
+
+    // Trouver une cellule vide
+    const emptyCells: Position[] = []
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (!grid.value[row]![col]!.isInitial && grid.value[row]![col]!.value === null) {
+          emptyCells.push({ row, col })
+        }
+      }
+    }
+
+    if (emptyCells.length === 0) return
+
+    // Choisir une cellule aléatoire
+    const randomIndex = Math.floor(Math.random() * emptyCells.length)
+    const { row, col } = emptyCells[randomIndex]!
+
+    // Révéler la solution
+    grid.value[row]![col]!.value = solution.value[row]![col]!
+    grid.value[row]![col]!.notes.clear()
+
+    hintsUsed.value++
+    updateErrors()
+    checkCompletion()
+    saveGame()
+  }
+
+  // Sauvegarder le jeu
+  function saveGame() {
+    const state = {
+      grid: grid.value.map((row) =>
+        row.map((cell) => ({
+          ...cell,
+          notes: Array.from(cell.notes)
+        }))
+      ),
+      solution: solution.value,
+      difficulty: difficulty.value,
+      startTime: startTime.value,
+      elapsedTime: elapsedTime.value,
+      isCompleted: isCompleted.value,
+      hintsUsed: hintsUsed.value
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  }
+
+  // Charger le jeu
+  function loadGame() {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return false
+
+    try {
+      const state = JSON.parse(saved)
+      grid.value = state.grid.map((row: any[]) =>
+        row.map((cell: { notes: any[] }) => ({
+          ...cell,
+          notes: new Set(cell.notes)
+        }))
+      )
+      solution.value = state.solution
+      difficulty.value = state.difficulty
+      startTime.value = Date.now() - state.elapsedTime
+      elapsedTime.value = state.elapsedTime
+      isCompleted.value = state.isCompleted
+      hintsUsed.value = state.hintsUsed
+      isPaused.value = false
+      selectedCell.value = null
+
+      if (!isCompleted.value) {
+        startTimer()
+      }
+
+      return true
+    } catch (error) {
+      console.error('Erreur lors du chargement de la partie:', error)
+      return false
+    }
+  }
+
+  // Réinitialiser le jeu
+  function resetGame() {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval)
+    }
+    grid.value = []
+    solution.value = []
+    startTime.value = 0
+    elapsedTime.value = 0
+    isCompleted.value = false
+    isPaused.value = false
+    hintsUsed.value = 0
+    selectedCell.value = null
+    noteMode.value = false
+    localStorage.removeItem(STORAGE_KEY)
+  }
+
+  return {
+    // État
+    grid,
+    solution,
+    difficulty,
+    startTime,
+    elapsedTime,
+    isCompleted,
+    isPaused,
+    hintsUsed,
+    selectedCell,
+    noteMode,
+    showErrors,
+
+    // Computed
+    formattedTime,
+    progress,
+
+    // Actions
+    newGame,
+    pauseGame,
+    resumeGame,
+    selectCell,
+    setCellValue,
+    toggleNote,
+    handleNumberInput,
+    clearSelectedCell,
+    updateErrors,
+    getHint,
+    saveGame,
+    loadGame,
+    resetGame
+  }
+})

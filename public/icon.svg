@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle grid pattern in background -->
+  <g opacity="0.08">
+    <line x1="150" y1="50" x2="150" y2="462" stroke="#fff" stroke-width="1"/>
+    <line x1="256" y1="50" x2="256" y2="462" stroke="#fff" stroke-width="1"/>
+    <line x1="362" y1="50" x2="362" y2="462" stroke="#fff" stroke-width="1"/>
+    <line x1="50" y1="150" x2="462" y2="150" stroke="#fff" stroke-width="1"/>
+    <line x1="50" y1="256" x2="462" y2="256" stroke="#fff" stroke-width="1"/>
+    <line x1="50" y1="362" x2="462" y2="362" stroke="#fff" stroke-width="1"/>
+  </g>
+  
+  <!-- Main 3x3 grid container with shadow -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="50" width="412" height="412" rx="20" fill="#1e293b" stroke="url(#accentGrad)" stroke-width="4"/>
+    
+    <!-- Bold vertical dividers (3x3 sections) -->
+    <line x1="187" y1="50" x2="187" y2="462" stroke="url(#accentGrad)" stroke-width="4"/>
+    <line x1="325" y1="50" x2="325" y2="462" stroke="url(#accentGrad)" stroke-width="4"/>
+    
+    <!-- Bold horizontal dividers (3x3 sections) -->
+    <line x1="50" y1="187" x2="462" y2="187" stroke="url(#accentGrad)" stroke-width="4"/>
+    <line x1="50" y1="325" x2="462" y2="325" stroke="url(#accentGrad)" stroke-width="4"/>
+    
+    <!-- Thin inner grid lines -->
+    <g opacity="0.4">
+      <line x1="96" y1="50" x2="96" y2="187" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="141" y1="50" x2="141" y2="187" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="233" y1="50" x2="233" y2="187" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="279" y1="50" x2="279" y2="187" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="371" y1="50" x2="371" y2="187" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="416" y1="50" x2="416" y2="187" stroke="#06b6d4" stroke-width="2"/>
+      
+      <line x1="50" y1="96" x2="187" y2="96" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="50" y1="141" x2="187" y2="141" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="50" y1="233" x2="187" y2="233" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="50" y1="279" x2="187" y2="279" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="50" y1="371" x2="187" y2="371" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="50" y1="416" x2="187" y2="416" stroke="#06b6d4" stroke-width="2"/>
+      
+      <line x1="187" y1="96" x2="325" y2="96" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="187" y1="141" x2="325" y2="141" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="187" y1="233" x2="325" y2="233" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="187" y1="279" x2="325" y2="279" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="187" y1="371" x2="325" y2="371" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="187" y1="416" x2="325" y2="416" stroke="#06b6d4" stroke-width="2"/>
+      
+      <line x1="325" y1="96" x2="462" y2="96" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="325" y1="141" x2="462" y2="141" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="325" y1="233" x2="462" y2="233" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="325" y1="279" x2="462" y2="279" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="325" y1="371" x2="462" y2="371" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="325" y1="416" x2="462" y2="416" stroke="#06b6d4" stroke-width="2"/>
+      
+      <line x1="96" y1="187" x2="96" y2="325" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="141" y1="187" x2="141" y2="325" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="233" y1="187" x2="233" y2="325" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="279" y1="187" x2="279" y2="325" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="371" y1="187" x2="371" y2="325" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="416" y1="187" x2="416" y2="325" stroke="#06b6d4" stroke-width="2"/>
+      
+      <line x1="96" y1="325" x2="96" y2="462" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="141" y1="325" x2="141" y2="462" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="233" y1="325" x2="233" y2="462" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="279" y1="325" x2="279" y2="462" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="371" y1="325" x2="371" y2="462" stroke="#06b6d4" stroke-width="2"/>
+      <line x1="416" y1="325" x2="416" y2="462" stroke="#06b6d4" stroke-width="2"/>
+    </g>
+  </g>
+  
+  <!-- Featured numbers with glow effect -->
+  <g filter="url(#glow)" font-family="'SF Pro Display', -apple-system, system-ui, sans-serif" font-weight="700" font-size="70" fill="url(#accentGrad)" text-anchor="middle">
+    <text x="119" y="136">5</text>
+    <text x="256" y="136">3</text>
+    <text x="393" y="284">7</text>
+    <text x="119" y="432">9</text>
+    <text x="393" y="432">1</text>
+  </g>
+  
+  <!-- Accent numbers (lighter) -->
+  <g font-family="'SF Pro Display', -apple-system, system-ui, sans-serif" font-weight="600" font-size="66" fill="#64748b" text-anchor="middle" opacity="0.7">
+    <text x="393" y="136">2</text>
+    <text x="119" y="284">4</text>
+    <text x="256" y="432">6</text>
+  </g>
+</svg>
