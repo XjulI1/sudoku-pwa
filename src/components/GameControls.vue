@@ -1,15 +1,21 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useSudokuStore } from '@/stores/sudoku'
+import { GridSize } from '@/types/sudoku'
 
 const store = useSudokuStore()
 
-const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+const numbers = computed(() => {
+  const size = store.gridSize
+  return Array.from({ length: size }, (_, i) => i + 1)
+})
 
 const handleKeyPress = (event: KeyboardEvent) => {
   if (store.isCompleted || store.isPaused) return
 
   const key = event.key
-  if (key >= '1' && key <= '9') {
+  const maxNum = store.gridSize
+  if (key >= '1' && key <= String(maxNum)) {
     store.handleNumberInput(parseInt(key))
   } else if (key === 'Backspace' || key === 'Delete') {
     store.clearSelectedCell()
@@ -26,7 +32,7 @@ if (typeof window !== 'undefined') {
 
 <template>
   <div class="game-controls">
-    <div class="number-pad">
+    <div class="number-pad" :class="{ 'pad-6x6': store.gridSize === 6 }">
       <button
         v-for="num in numbers"
         :key="num"
@@ -80,6 +86,10 @@ if (typeof window !== 'undefined') {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 0.5rem;
+}
+
+.number-pad.pad-6x6 {
+  grid-template-columns: repeat(6, 1fr);
 }
 
 .number-btn {

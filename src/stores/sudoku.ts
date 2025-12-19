@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Grid, Cell, Position } from '@/types/sudoku'
-import { Difficulty } from '@/types/sudoku'
+import { Difficulty, GridSize } from '@/types/sudoku'
 import { SudokuGenerator } from '@/utils/sudokuGenerator'
 import { SudokuValidator } from '@/utils/sudokuValidator'
 import { StatsManager } from '@/utils/statsManager'
@@ -13,6 +13,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
   const grid = ref<Grid>([])
   const solution = ref<number[][]>([])
   const difficulty = ref<Difficulty>(Difficulty.NORMAL)
+  const gridSize = ref<GridSize>(GridSize.NINE)
   const startTime = ref<number>(0)
   const elapsedTime = ref<number>(0)
   const isCompleted = ref(false)
@@ -40,8 +41,9 @@ export const useSudokuStore = defineStore('sudoku', () => {
   const progress = computed(() => {
     let filled = 0
     let total = 0
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
+    const size = grid.value.length
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
         if (!grid.value[row]![col]!.isInitial) {
           total++
           if (grid.value[row]![col]!.value !== null) {
@@ -54,9 +56,9 @@ export const useSudokuStore = defineStore('sudoku', () => {
   })
 
   // Initialisation de la grille vide
-  function createEmptyGrid(): Grid {
-    return Array.from({ length: 9 }, () =>
-      Array.from({ length: 9 }, () => ({
+  function createEmptyGrid(size: number): Grid {
+    return Array.from({ length: size }, () =>
+      Array.from({ length: size }, () => ({
         value: null,
         notes: new Set<number>(),
         isInitial: false,
@@ -67,17 +69,18 @@ export const useSudokuStore = defineStore('sudoku', () => {
   }
 
   // Démarre un nouveau jeu
-  function newGame(newDifficulty: Difficulty) {
+  function newGame(newDifficulty: Difficulty, newGridSize: GridSize = GridSize.NINE) {
     difficulty.value = newDifficulty
-    const generator = new SudokuGenerator()
+    gridSize.value = newGridSize
+    const generator = new SudokuGenerator(newGridSize)
     const { puzzle, solution: sol } = generator.generate(newDifficulty)
 
     solution.value = sol
-    grid.value = createEmptyGrid()
+    grid.value = createEmptyGrid(newGridSize)
 
     // Remplir la grille avec le puzzle
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
+    for (let row = 0; row < newGridSize; row++) {
+      for (let col = 0; col < newGridSize; col++) {
         if (puzzle[row]![col] !== 0) {
           grid.value[row]![col]!.value = puzzle[row]![col]!
           grid.value[row]![col]!.isInitial = true
@@ -139,23 +142,27 @@ export const useSudokuStore = defineStore('sudoku', () => {
 
   // Mettre en surbrillance les cellules liées
   function highlightRelatedCells(row: number, col: number) {
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
+    const size = grid.value.length
+    const regionRows = gridSize.value === GridSize.SIX ? 2 : 3
+    const regionCols = gridSize.value === GridSize.SIX ? 3 : 3
+
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
         grid.value[r]![c]!.isHighlighted = false
       }
     }
 
     // Ligne et colonne
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < size; i++) {
       grid.value[row]![i]!.isHighlighted = true
       grid.value[i]![col]!.isHighlighted = true
     }
 
-    // Carré 3x3
-    const startRow = row - (row % 3)
-    const startCol = col - (col % 3)
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
+    // Région
+    const startRow = row - (row % regionRows)
+    const startCol = col - (col % regionCols)
+    for (let i = 0; i < regionRows; i++) {
+      for (let j = 0; j < regionCols; j++) {
         grid.value[startRow + i]![startCol + j]!.isHighlighted = true
       }
     }
@@ -225,9 +232,10 @@ export const useSudokuStore = defineStore('sudoku', () => {
 
   // Mettre à jour les erreurs
   function updateErrors() {
+    const size = grid.value.length
     if (!showErrors.value) {
-      for (let row = 0; row < 9; row++) {
-        for (let col = 0; col < 9; col++) {
+      for (let row = 0; row < size; row++) {
+        for (let col = 0; col < size; col++) {
           grid.value[row]![col]!.isError = false
         }
       }
@@ -235,8 +243,8 @@ export const useSudokuStore = defineStore('sudoku', () => {
     }
 
     let currentErrors = 0
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
         const cell = grid.value[row]![col]!
         if (cell.value !== null && !cell.isInitial) {
           const isError = !SudokuValidator.isValidMove(grid.value, row, col, cell.value)
@@ -268,6 +276,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
         // Enregistrer les statistiques de la partie
         StatsManager.saveGameStats(
           difficulty.value,
+          gridSize.value,
           elapsedTime.value,
           errorsCount.value,
           hintsUsed.value,
@@ -282,10 +291,11 @@ export const useSudokuStore = defineStore('sudoku', () => {
   function getHint() {
     if (isCompleted.value) return
 
+    const size = grid.value.length
     // Trouver une cellule vide
     const emptyCells: Position[] = []
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
+    for (let row = 0; row < size; row++) {
+      for (let col = 0; col < size; col++) {
         if (!grid.value[row]![col]!.isInitial && grid.value[row]![col]!.value === null) {
           emptyCells.push({ row, col })
         }
@@ -319,6 +329,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
       ),
       solution: solution.value,
       difficulty: difficulty.value,
+      gridSize: gridSize.value,
       startTime: startTime.value,
       elapsedTime: elapsedTime.value,
       isCompleted: isCompleted.value,
@@ -345,6 +356,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
       )
       solution.value = state.solution
       difficulty.value = state.difficulty
+      gridSize.value = state.gridSize || GridSize.NINE
       startTime.value = Date.now() - state.elapsedTime
       elapsedTime.value = state.elapsedTime
       isCompleted.value = state.isCompleted
@@ -392,6 +404,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
     grid,
     solution,
     difficulty,
+    gridSize,
     startTime,
     elapsedTime,
     isCompleted,

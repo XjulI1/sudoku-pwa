@@ -11,6 +11,11 @@ export interface Cell {
 
 export type Grid = Cell[][]
 
+export const enum GridSize {
+  SIX = 6,
+  NINE = 9
+}
+
 export const enum Difficulty {
   SIMPLE = 'simple',
   NORMAL = 'normal',
@@ -23,6 +28,7 @@ export interface GameState {
   grid: Grid
   solution: number[][]
   difficulty: Difficulty
+  gridSize: GridSize
   startTime: number
   elapsedTime: number
   isCompleted: boolean
@@ -37,6 +43,7 @@ export interface Position {
 
 export interface GameStats {
   difficulty: Difficulty
+  gridSize: GridSize
   completionTime: number // en millisecondes
   errorsCount: number
   hintsUsed: number
@@ -48,6 +55,7 @@ export interface GameStats {
 
 export interface DifficultyStats {
   difficulty: Difficulty
+  gridSize: GridSize
   gamesPlayed: number
   averageTime: number
   averageScore: number

@@ -1,17 +1,28 @@
-import { Difficulty } from '@/types/sudoku'
+import { Difficulty, GridSize } from '@/types/sudoku'
 
 export class SudokuGenerator {
   private grid: number[][] = []
+  private size: number = 9
+  private regionRows: number = 3
+  private regionCols: number = 3
 
-  constructor() {
-    this.grid = Array.from({ length: 9 }, () => Array(9).fill(0))
+  constructor(gridSize: GridSize = GridSize.NINE) {
+    this.size = gridSize
+    if (gridSize === GridSize.SIX) {
+      this.regionRows = 2
+      this.regionCols = 3
+    } else {
+      this.regionRows = 3
+      this.regionCols = 3
+    }
+    this.grid = Array.from({ length: this.size }, () => Array(this.size).fill(0))
   }
 
   /**
    * Génère une grille de Sudoku complète
    */
   private generateComplete(): number[][] {
-    this.grid = Array.from({ length: 9 }, () => Array(9).fill(0))
+    this.grid = Array.from({ length: this.size }, () => Array(this.size).fill(0))
     this.fillGrid()
     return this.grid.map((row) => [...row])
   }
@@ -20,10 +31,12 @@ export class SudokuGenerator {
    * Remplit la grille de manière récursive avec backtracking
    */
   private fillGrid(): boolean {
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
+    for (let row = 0; row < this.size; row++) {
+      for (let col = 0; col < this.size; col++) {
         if (this.grid[row]![col] === 0) {
-          const numbers = this.shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9])
+          const numbers = this.shuffleArray(
+            Array.from({ length: this.size }, (_, i) => i + 1)
+          )
           for (const num of numbers) {
             if (this.isValid(row, col, num)) {
               this.grid[row]![col] = num
@@ -45,20 +58,20 @@ export class SudokuGenerator {
    */
   private isValid(row: number, col: number, num: number): boolean {
     // Vérifier la ligne
-    for (let x = 0; x < 9; x++) {
+    for (let x = 0; x < this.size; x++) {
       if (this.grid[row]![x] === num) return false
     }
 
     // Vérifier la colonne
-    for (let x = 0; x < 9; x++) {
+    for (let x = 0; x < this.size; x++) {
       if (this.grid[x]![col] === num) return false
     }
 
-    // Vérifier le carré 3x3
-    const startRow = row - (row % 3)
-    const startCol = col - (col % 3)
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
+    // Vérifier la région
+    const startRow = row - (row % this.regionRows)
+    const startCol = col - (col % this.regionCols)
+    for (let i = 0; i < this.regionRows; i++) {
+      for (let j = 0; j < this.regionCols; j++) {
         if (this.grid[i + startRow]![j + startCol] === num) return false
       }
     }
@@ -84,8 +97,12 @@ export class SudokuGenerator {
   private removeNumbers(grid: number[][], difficulty: Difficulty): number[][] {
     const cellsToRemove = this.getCellsToRemove(difficulty)
     const puzzle = grid.map((row) => [...row])
+    const totalCells = this.size * this.size
     const positions = this.shuffleArray(
-      Array.from({ length: 81 }, (_, i) => ({ row: Math.floor(i / 9), col: i % 9 }))
+      Array.from({ length: totalCells }, (_, i) => ({
+        row: Math.floor(i / this.size),
+        col: i % this.size
+      }))
     )
 
     let removed = 0
@@ -111,19 +128,40 @@ export class SudokuGenerator {
    * Retourne le nombre de cellules à retirer selon la difficulté
    */
   private getCellsToRemove(difficulty: Difficulty): number {
-    switch (difficulty) {
-      case Difficulty.SIMPLE:
-        return 35 // ~43% rempli
-      case Difficulty.NORMAL:
-        return 45 // ~44% rempli
-      case Difficulty.EXPERT:
-        return 52 // ~36% rempli
-      case Difficulty.MAITRE:
-        return 58 // ~28% rempli
-      case Difficulty.DIEUX_SUDOKU:
-        return 64 // ~21% rempli
-      default:
-        return 40
+    const totalCells = this.size * this.size
+
+    if (this.size === 6) {
+      // Pour grille 6x6 (36 cellules)
+      switch (difficulty) {
+        case Difficulty.SIMPLE:
+          return 15 // ~42% rempli
+        case Difficulty.NORMAL:
+          return 20 // ~44% rempli
+        case Difficulty.EXPERT:
+          return 23 // ~36% rempli
+        case Difficulty.MAITRE:
+          return 26 // ~28% rempli
+        case Difficulty.DIEUX_SUDOKU:
+          return 28 // ~22% rempli
+        default:
+          return 18
+      }
+    } else {
+      // Pour grille 9x9 (81 cellules)
+      switch (difficulty) {
+        case Difficulty.SIMPLE:
+          return 35 // ~43% rempli
+        case Difficulty.NORMAL:
+          return 45 // ~44% rempli
+        case Difficulty.EXPERT:
+          return 52 // ~36% rempli
+        case Difficulty.MAITRE:
+          return 58 // ~28% rempli
+        case Difficulty.DIEUX_SUDOKU:
+          return 64 // ~21% rempli
+        default:
+          return 40
+      }
     }
   }
 
@@ -143,10 +181,10 @@ export class SudokuGenerator {
   private countSolutions(grid: number[][], solutions: number[][][], maxSolutions: number): void {
     if (solutions.length >= maxSolutions) return
 
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
+    for (let row = 0; row < this.size; row++) {
+      for (let col = 0; col < this.size; col++) {
         if (grid[row]![col] === 0) {
-          for (let num = 1; num <= 9; num++) {
+          for (let num = 1; num <= this.size; num++) {
             if (this.isValidInGrid(grid, row, col, num)) {
               grid[row]![col] = num
               this.countSolutions(grid, solutions, maxSolutions)
@@ -167,20 +205,20 @@ export class SudokuGenerator {
    */
   private isValidInGrid(grid: number[][], row: number, col: number, num: number): boolean {
     // Vérifier la ligne
-    for (let x = 0; x < 9; x++) {
+    for (let x = 0; x < this.size; x++) {
       if (grid[row]![x] === num) return false
     }
 
     // Vérifier la colonne
-    for (let x = 0; x < 9; x++) {
+    for (let x = 0; x < this.size; x++) {
       if (grid[x]![col] === num) return false
     }
 
-    // Vérifier le carré 3x3
-    const startRow = row - (row % 3)
-    const startCol = col - (col % 3)
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
+    // Vérifier la région
+    const startRow = row - (row % this.regionRows)
+    const startCol = col - (col % this.regionCols)
+    for (let i = 0; i < this.regionRows; i++) {
+      for (let j = 0; j < this.regionCols; j++) {
         if (grid[i + startRow]![j + startCol] === num) return false
       }
     }

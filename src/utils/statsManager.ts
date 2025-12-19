@@ -1,5 +1,5 @@
 import type { GameStats, DifficultyStats } from '@/types/sudoku'
-import { Difficulty } from '@/types/sudoku'
+import { Difficulty, GridSize } from '@/types/sudoku'
 import { ScoreCalculator } from './scoreCalculator'
 
 const STATS_STORAGE_KEY = 'sudoku-statistics'
@@ -14,6 +14,7 @@ export class StatsManager {
    */
   static saveGameStats(
     difficulty: Difficulty,
+    gridSize: GridSize,
     completionTime: number,
     errorsCount: number,
     hintsUsed: number,
@@ -30,6 +31,7 @@ export class StatsManager {
 
     const gameStat: GameStats = {
       difficulty,
+      gridSize,
       completionTime,
       errorsCount,
       hintsUsed,
@@ -40,7 +42,8 @@ export class StatsManager {
     }
 
     const allStats = this.loadAllStats()
-    const diffStats = allStats[difficulty]
+    const statsKey = `${difficulty}-${gridSize}` as Difficulty
+    const diffStats = allStats[statsKey]
 
     if (diffStats) {
       diffStats.history.push(gameStat)
@@ -63,8 +66,9 @@ export class StatsManager {
       }
     } else {
       // Première partie pour cette difficulté
-      allStats[difficulty] = {
+      allStats[statsKey] = {
         difficulty,
+        gridSize,
         gamesPlayed: 1,
         averageTime: completionTime,
         averageScore: score,

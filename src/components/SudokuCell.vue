@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Cell } from '@/types/sudoku'
+import { GridSize } from '@/types/sudoku'
 
 const props = defineProps<{
   cell: Cell
   row: number
   col: number
+  gridSize: GridSize
   isSelected: boolean
 }>()
 
@@ -13,25 +15,52 @@ const emit = defineEmits<{
   select: [row: number, col: number]
 }>()
 
+const regionCols = computed(() => (props.gridSize === GridSize.SIX ? 3 : 3))
+const regionRows = computed(() => (props.gridSize === GridSize.SIX ? 2 : 3))
+const maxIndex = computed(() => props.gridSize - 1)
+
 const cellClass = computed(() => ({
   'sudoku-cell': true,
   'initial': props.cell.isInitial,
   'error': props.cell.isError,
   'highlighted': props.cell.isHighlighted,
   'selected': props.isSelected,
-  'thick-right': (props.col + 1) % 3 === 0 && props.col !== 8,
-  'thick-bottom': (props.row + 1) % 3 === 0 && props.row !== 8
+  'thick-right': (props.col + 1) % regionCols.value === 0 && props.col !== maxIndex.value,
+  'thick-bottom': (props.row + 1) % regionRows.value === 0 && props.row !== maxIndex.value
 }))
 
 const notesArray = computed(() => {
   return Array.from(props.cell.notes).sort()
+})
+
+const notesGridTemplate = computed(() => {
+  if (props.gridSize === GridSize.SIX) {
+    return {
+      areas: `'n1 n2 n3' 'n4 n5 n6'`,
+      columns: 'repeat(3, 1fr)',
+      rows: 'repeat(2, 1fr)'
+    }
+  }
+  return {
+    areas: `'n1 n2 n3' 'n4 n5 n6' 'n7 n8 n9'`,
+    columns: 'repeat(3, 1fr)',
+    rows: 'repeat(3, 1fr)'
+  }
 })
 </script>
 
 <template>
   <div :class="cellClass" @click="emit('select', row, col)">
     <div v-if="cell.value" class="cell-value">{{ cell.value }}</div>
-    <div v-else-if="cell.notes.size > 0" class="cell-notes">
+    <div
+      v-else-if="cell.notes.size > 0"
+      class="cell-notes"
+      :style="{
+        gridTemplateAreas: notesGridTemplate.areas,
+        gridTemplateColumns: notesGridTemplate.columns,
+        gridTemplateRows: notesGridTemplate.rows
+      }"
+    >
       <span
         v-for="note in notesArray"
         :key="note"
@@ -101,12 +130,6 @@ const notesArray = computed(() => {
 
 .cell-notes {
   display: grid;
-  grid-template-areas:
-    'n1 n2 n3'
-    'n4 n5 n6'
-    'n7 n8 n9';
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
   width: 100%;
   height: 100%;
   padding: 2px;
