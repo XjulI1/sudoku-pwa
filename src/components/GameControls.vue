@@ -68,6 +68,15 @@ if (typeof window !== 'undefined') {
       >
         💡 Indice
       </button>
+      <button
+        class="action-btn highlight-btn"
+        :class="{ active: store.showHighlights }"
+        @click="store.showHighlights = !store.showHighlights"
+        :disabled="store.isCompleted || store.isPaused"
+        title="Activer/Désactiver la surbrillance"
+      >
+        ✨ Lumière
+      </button>
     </div>
   </div>
 </template>
@@ -123,7 +132,7 @@ if (typeof window !== 'undefined') {
 
 .action-buttons {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.5rem;
 }
 

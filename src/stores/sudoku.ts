@@ -22,6 +22,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
   const selectedCell = ref<Position | null>(null)
   const noteMode = ref(false)
   const showErrors = ref(true)
+  const showHighlights = ref(true)
   const errorsCount = ref(0)
   const notesUsed = ref(0)
   const totalPauseTime = ref(0)
@@ -99,6 +100,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
     notesUsed.value = 0
     totalPauseTime.value = 0
     lastPauseStart.value = null
+    showHighlights.value = newDifficulty === Difficulty.SIMPLE || newDifficulty === Difficulty.NORMAL
 
     startTimer()
     saveGame()
@@ -146,11 +148,15 @@ export const useSudokuStore = defineStore('sudoku', () => {
     const regionRows = gridSize.value === GridSize.SIX ? 2 : 3
     const regionCols = gridSize.value === GridSize.SIX ? 3 : 3
 
+    // Toujours désactiver tous les surbrillances d'abord
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         grid.value[r]![c]!.isHighlighted = false
       }
     }
+
+    // Si la surbrillance est désactivée, ne rien faire de plus
+    if (!showHighlights.value) return
 
     // Ligne et colonne
     for (let i = 0; i < size; i++) {
@@ -413,6 +419,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
     selectedCell,
     noteMode,
     showErrors,
+    showHighlights,
     errorsCount,
     notesUsed,
     totalPauseTime,
