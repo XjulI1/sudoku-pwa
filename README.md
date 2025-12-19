@@ -5,13 +5,20 @@ Un jeu de Sudoku moderne développé avec Vue 3, TypeScript et configuré comme 
 ## Fonctionnalités
 
 ### Gameplay
-- **4 niveaux de difficulté** : Simple, Normal, Expert, Maître
+
+- **5 niveaux de difficulté** :
+  - **Simple** : 35 cases vides (~43% de la grille remplie) - Idéal pour débuter
+  - **Normal** : 45 cases vides (~44% de la grille remplie) - Difficulté équilibrée
+  - **Expert** : 52 cases vides (~36% de la grille remplie) - Challenge élevé
+  - **Maître** : 58 cases vides (~28% de la grille remplie) - Pour les experts
+  - **Dieux du Sudoku** : 64 cases vides (~21% de la grille remplie) - Difficulté extrême
 - **Mode Notes** : Ajoutez des notes dans les cases pour marquer les possibilités
 - **Validation en temps réel** : Les erreurs sont mises en surbrillance automatiquement
 - **Système d'indices** : Obtenez de l'aide quand vous êtes bloqué
 - **Surbrillance intelligente** : Les lignes, colonnes et régions liées sont mises en évidence
 
 ### Fonctionnalités supplémentaires
+
 - **Chronomètre** : Suivez votre temps de résolution
 - **Sauvegarde automatique** : Votre progression est sauvegardée dans le localStorage
 - **Mode sombre automatique** : S'adapte aux préférences système
@@ -80,9 +87,11 @@ src/
 ## Algorithmes
 
 ### Génération de grilles
+
 L'algorithme de génération utilise le backtracking pour créer une grille valide complète, puis retire des cases en fonction de la difficulté tout en s'assurant qu'une solution unique existe.
 
 ### Validation
+
 La validation vérifie en temps réel les conflits de lignes, colonnes et régions 3x3 selon les règles du Sudoku.
 
 ## Note sur les icônes PWA
@@ -90,20 +99,24 @@ La validation vérifie en temps réel les conflits de lignes, colonnes et régio
 Les fichiers `pwa-192x192.png` et `pwa-512x512.png` sont actuellement des placeholders SVG. Pour une application de production, remplacez-les par de vraies images PNG de votre icône.
 
 Vous pouvez générer des icônes à partir de `public/icon.svg` en utilisant un outil comme :
+
 - [realfavicongenerator.net](https://realfavicongenerator.net/)
 - [favicon.io](https://favicon.io/)
 
 ## Développement
 
 ### Configuration IDE recommandée
+
 [VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
 
 ### Type-check
+
 ```bash
 yarn type-check
 ```
 
 ### Lint
+
 ```bash
 yarn lint
 ```
