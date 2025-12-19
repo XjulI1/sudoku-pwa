@@ -102,8 +102,16 @@ export class StatsManager {
   /**
    * Charge les statistiques d'une difficulté spécifique
    */
-  static loadDifficultyStats(difficulty: Difficulty): DifficultyStats | null {
+  static loadDifficultyStats(difficulty: Difficulty, gridSize?: GridSize): DifficultyStats | null {
     const allStats = this.loadAllStats()
+
+    // Si gridSize est spécifié, utiliser la clé composite
+    if (gridSize !== undefined) {
+      const statsKey = `${difficulty}-${gridSize}` as Difficulty
+      return allStats[statsKey] || null
+    }
+
+    // Sinon, chercher les anciennes stats (compatibilité)
     return allStats[difficulty] || null
   }
 

@@ -16,15 +16,30 @@
       </div>
     </div>
 
-    <div class="difficulty-tabs">
-      <button
-        v-for="diff in difficulties"
-        :key="diff.value"
-        :class="{ active: selectedDifficulty === diff.value }"
-        @click="selectedDifficulty = diff.value"
-      >
-        {{ diff.label }}
-      </button>
+    <div class="filter-section">
+      <div class="grid-size-tabs">
+        <button
+          v-for="size in gridSizes"
+          :key="size.value"
+          :class="{ active: selectedGridSize === size.value }"
+          @click="selectedGridSize = size.value"
+        >
+          {{ size.label }}
+          <span class="count">({{ getGridSizeCount(size.value) }})</span>
+        </button>
+      </div>
+
+      <div class="difficulty-tabs">
+        <button
+          v-for="diff in difficulties"
+          :key="diff.value"
+          :class="{ active: selectedDifficulty === diff.value }"
+          @click="selectedDifficulty = diff.value"
+        >
+          {{ diff.label }}
+          <span class="count">({{ getDifficultyCount(diff.value, selectedGridSize) }})</span>
+        </button>
+      </div>
     </div>
 
     <div v-if="currentStats" class="difficulty-stats">
@@ -94,7 +109,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Difficulty } from '@/types/sudoku'
+import { Difficulty, GridSize } from '@/types/sudoku'
 import { StatsManager } from '@/utils/statsManager'
 
 defineEmits<{
@@ -106,22 +121,46 @@ const difficulties = [
   { value: Difficulty.NORMAL, label: 'Normal' },
   { value: Difficulty.EXPERT, label: 'Expert' },
   { value: Difficulty.MAITRE, label: 'Maître' },
-  { value: Difficulty.DIEUX_SUDOKU, label: 'Dieux' }
+  { value: Difficulty.DIEUX_SUDOKU, label: 'Dieux' },
+]
+
+const gridSizes = [
+  { value: GridSize.SIX, label: '6x6' },
+  { value: GridSize.NINE, label: '9x9' },
 ]
 
 const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
+const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const totalGamesPlayed = computed(() => StatsManager.getTotalGamesPlayed())
 const bestScore = computed(() => StatsManager.getBestScore())
 
 const currentStats = computed(() => {
-  return StatsManager.loadDifficultyStats(selectedDifficulty.value)
+  return StatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
 })
 
 const sortedHistory = computed(() => {
   if (!currentStats.value) return []
   return [...currentStats.value.history].sort((a, b) => b.completedAt - a.completedAt)
 })
+
+// Compte le nombre de parties pour une taille de grille donnée
+const getGridSizeCount = (gridSize: GridSize): number => {
+  let total = 0
+  difficulties.forEach((diff) => {
+    const stats = StatsManager.loadDifficultyStats(diff.value, gridSize)
+    if (stats) {
+      total += stats.gamesPlayed
+    }
+  })
+  return total
+}
+
+// Compte le nombre de parties pour une difficulté et taille données
+const getDifficultyCount = (difficulty: Difficulty, gridSize: GridSize): number => {
+  const stats = StatsManager.loadDifficultyStats(difficulty, gridSize)
+  return stats?.gamesPlayed || 0
+}
 
 function formatTime(milliseconds: number): string {
   return StatsManager.formatTime(milliseconds)
@@ -214,10 +253,44 @@ function getScoreClass(score: number): string {
   font-size: 0.9rem;
 }
 
+.filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.grid-size-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.grid-size-tabs button {
+  padding: 0.75rem 1.5rem;
+  background: var(--cell-bg);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.grid-size-tabs button:hover {
+  background: var(--cell-hover);
+}
+
+.grid-size-tabs button.active {
+  background: var(--primary);
+  color: white;
+}
+
 .difficulty-tabs {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
   overflow-x: auto;
 }
 
@@ -232,6 +305,9 @@ function getScoreClass(score: number): string {
   font-weight: 500;
   white-space: nowrap;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .difficulty-tabs button:hover {
@@ -241,6 +317,11 @@ function getScoreClass(score: number): string {
 .difficulty-tabs button.active {
   background: var(--primary);
   color: white;
+}
+
+.count {
+  opacity: 0.7;
+  font-size: 0.85em;
 }
 
 .stats-grid {
