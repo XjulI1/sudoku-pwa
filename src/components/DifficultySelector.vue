@@ -1,18 +1,31 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Difficulty, GridSize } from '@/types/sudoku'
+import { TangoDifficulty } from '@/types/tango'
 import { useSudokuStore } from '@/stores/sudoku'
+import { useTangoStore } from '@/stores/tango'
 
-const store = useSudokuStore()
-const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
+const sudokuStore = useSudokuStore()
+const tangoStore = useTangoStore()
+
+type GameType = 'sudoku' | 'tango'
+
+const selectedGameType = ref<GameType>('sudoku')
+const selectedSudokuDifficulty = ref<Difficulty>(Difficulty.NORMAL)
+const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const emit = defineEmits<{
-  start: []
+  start: [gameType: GameType]
   showStats: []
 }>()
 
-const difficulties = [
+const gameTypes = [
+  { value: 'sudoku' as GameType, label: 'Sudoku', icon: '🔢', description: 'Jeu de logique classique' },
+  { value: 'tango' as GameType, label: 'Tango', icon: '☀️🌙', description: 'Puzzle de symboles' },
+]
+
+const sudokuDifficulties = [
   { value: Difficulty.SIMPLE, label: 'Simple', description: 'Parfait pour débuter' },
   { value: Difficulty.NORMAL, label: 'Normal', description: 'Difficulté moyenne' },
   { value: Difficulty.EXPERT, label: 'Expert', description: 'Pour les joueurs expérimentés' },
@@ -24,14 +37,28 @@ const difficulties = [
   },
 ]
 
+const tangoDifficulties = [
+  { value: TangoDifficulty.EASY, label: 'Facile', description: 'Parfait pour découvrir Tango' },
+  { value: TangoDifficulty.MEDIUM, label: 'Moyen', description: 'Un bon défi' },
+  { value: TangoDifficulty.HARD, label: 'Difficile', description: 'Pour les experts' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6', description: 'Grille 6x6 (2x3 régions)' },
   { value: GridSize.NINE, label: '9x9', description: 'Grille classique 9x9 (3x3 régions)' },
 ]
 
+const currentDifficulties = computed(() => {
+  return selectedGameType.value === 'sudoku' ? sudokuDifficulties : tangoDifficulties
+})
+
 const startNewGame = () => {
-  store.newGame(selectedDifficulty.value, selectedGridSize.value)
-  emit('start')
+  if (selectedGameType.value === 'sudoku') {
+    sudokuStore.newGame(selectedSudokuDifficulty.value, selectedGridSize.value)
+  } else {
+    tangoStore.newGame(selectedTangoDifficulty.value)
+  }
+  emit('start', selectedGameType.value)
 }
 
 const openStats = () => {
@@ -41,11 +68,39 @@ const openStats = () => {
 
 <template>
   <div class="difficulty-selector">
-    <img src="/icon.svg" alt="Sudoku" class="app-icon" />
+    <img src="/icon.svg" alt="Puzzle Games" class="app-icon" />
     <h2>Nouvelle partie</h2>
-    <p class="subtitle">Choisissez la taille de la grille et le niveau de difficulté</p>
+    <p class="subtitle">Choisissez votre jeu et configurez la partie</p>
 
+    <!-- Sélection du type de jeu -->
     <div class="section">
+      <h3 class="section-title">Type de jeu</h3>
+      <div class="game-type-options">
+        <label
+          v-for="game in gameTypes"
+          :key="game.value"
+          class="game-type-option"
+          :class="{ selected: selectedGameType === game.value }"
+        >
+          <input
+            type="radio"
+            :value="game.value"
+            v-model="selectedGameType"
+            class="game-radio"
+          />
+          <div class="option-content">
+            <div class="game-header">
+              <span class="game-icon">{{ game.icon }}</span>
+              <h4 class="option-title">{{ game.label }}</h4>
+            </div>
+            <p class="option-description">{{ game.description }}</p>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Taille de grille (seulement pour Sudoku) -->
+    <div v-if="selectedGameType === 'sudoku'" class="section">
       <h3 class="section-title">Taille de la grille</h3>
       <div class="grid-size-options">
         <label
@@ -68,19 +123,24 @@ const openStats = () => {
       </div>
     </div>
 
+    <!-- Difficulté -->
     <div class="section">
       <h3 class="section-title">Difficulté</h3>
       <div class="difficulty-options">
         <label
-          v-for="diff in difficulties"
+          v-for="diff in currentDifficulties"
           :key="diff.value"
           class="difficulty-option"
-          :class="{ selected: selectedDifficulty === diff.value }"
+          :class="{
+            selected: selectedGameType === 'sudoku'
+              ? selectedSudokuDifficulty === diff.value
+              : selectedTangoDifficulty === diff.value
+          }"
         >
           <input
             type="radio"
             :value="diff.value"
-            v-model="selectedDifficulty"
+            v-model="selectedGameType === 'sudoku' ? selectedSudokuDifficulty : selectedTangoDifficulty"
             class="difficulty-radio"
           />
           <div class="option-content">
@@ -134,6 +194,55 @@ h2 {
   font-weight: 600;
   margin: 0 0 1rem 0;
   color: var(--text);
+}
+
+.game-type-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.game-type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--card-bg);
+}
+
+.game-type-option:hover {
+  border-color: var(--primary);
+  background-color: var(--card-hover);
+  transform: translateY(-2px);
+}
+
+.game-type-option.selected {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.game-radio {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.game-icon {
+  font-size: 1.5rem;
 }
 
 .grid-size-options {
