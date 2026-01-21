@@ -52,6 +52,29 @@ const currentDifficulties = computed(() => {
   return selectedGameType.value === 'sudoku' ? sudokuDifficulties : tangoDifficulties
 })
 
+const selectedDifficulty = computed({
+  get: () => {
+    return selectedGameType.value === 'sudoku'
+      ? selectedSudokuDifficulty.value
+      : selectedTangoDifficulty.value
+  },
+  set: (value: Difficulty | TangoDifficulty) => {
+    if (selectedGameType.value === 'sudoku') {
+      selectedSudokuDifficulty.value = value as Difficulty
+    } else {
+      selectedTangoDifficulty.value = value as TangoDifficulty
+    }
+  }
+})
+
+const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty) => {
+  if (selectedGameType.value === 'sudoku') {
+    return selectedSudokuDifficulty.value === diffValue
+  } else {
+    return selectedTangoDifficulty.value === diffValue
+  }
+}
+
 const startNewGame = () => {
   if (selectedGameType.value === 'sudoku') {
     sudokuStore.newGame(selectedSudokuDifficulty.value, selectedGridSize.value)
@@ -131,16 +154,12 @@ const openStats = () => {
           v-for="diff in currentDifficulties"
           :key="diff.value"
           class="difficulty-option"
-          :class="{
-            selected: selectedGameType === 'sudoku'
-              ? selectedSudokuDifficulty === diff.value
-              : selectedTangoDifficulty === diff.value
-          }"
+          :class="{ selected: isDifficultySelected(diff.value) }"
         >
           <input
             type="radio"
             :value="diff.value"
-            v-model="selectedGameType === 'sudoku' ? selectedSudokuDifficulty : selectedTangoDifficulty"
+            v-model="selectedDifficulty"
             class="difficulty-radio"
           />
           <div class="option-content">
