@@ -128,8 +128,6 @@ export class SudokuGenerator {
    * Retourne le nombre de cellules à retirer selon la difficulté
    */
   private getCellsToRemove(difficulty: Difficulty): number {
-    const totalCells = this.size * this.size
-
     if (this.size === 6) {
       // Pour grille 6x6 (36 cellules)
       switch (difficulty) {
