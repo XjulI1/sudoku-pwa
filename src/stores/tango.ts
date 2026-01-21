@@ -4,7 +4,6 @@ import {
   TangoSymbol,
   TangoDifficulty,
   type TangoGrid,
-  type TangoCell,
   type TangoPosition,
   type TangoConstraint
 } from '@/types/tango'

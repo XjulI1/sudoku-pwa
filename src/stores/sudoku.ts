@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Grid, Cell, Position } from '@/types/sudoku'
+import type { Grid, Position } from '@/types/sudoku'
 import { Difficulty, GridSize } from '@/types/sudoku'
 import { SudokuGenerator } from '@/utils/sudokuGenerator'
 import { SudokuValidator } from '@/utils/sudokuValidator'
