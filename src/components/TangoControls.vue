@@ -47,12 +47,12 @@ if (typeof window !== 'undefined') {
         💡 Indice
       </button>
       <button
-        class="action-btn errors-btn"
-        @click="store.toggleShowErrors"
-        :class="{ active: !store.showErrors }"
-        title="Masquer/Afficher les erreurs"
+        class="action-btn highlights-btn"
+        @click="store.toggleShowHighlights"
+        :class="{ active: !store.showHighlights }"
+        title="Activer/Désactiver les surbrillances"
       >
-        {{ store.showErrors ? '👁️ Erreurs' : '🔒 Mode zen' }}
+        {{ store.showHighlights ? '💡 Lumière' : '🌙 Sans lumière' }}
       </button>
     </div>
   </div>
@@ -149,13 +149,13 @@ if (typeof window !== 'undefined') {
   color: white;
 }
 
-.errors-btn.active {
+.highlights-btn.active {
   background-color: var(--primary);
   border-color: var(--primary);
   color: white;
 }
 
-.errors-btn:hover:not(:disabled) {
+.highlights-btn:hover:not(:disabled) {
   background-color: var(--primary);
   border-color: var(--primary);
   color: white;

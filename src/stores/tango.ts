@@ -27,6 +27,7 @@ export const useTangoStore = defineStore('tango', () => {
   const hintsUsed = ref(0)
   const selectedCell = ref<TangoPosition | null>(null)
   const showErrors = ref(true)
+  const showHighlights = ref(true)
   const errorsCount = ref(0)
   const totalPauseTime = ref(0)
   const lastPauseStart = ref<number | null>(null)
@@ -165,10 +166,12 @@ export const useTangoStore = defineStore('tango', () => {
       }
     }
 
-    // Mettre en surbrillance la ligne et la colonne
-    for (let i = 0; i < GRID_SIZE; i++) {
-      grid.value[row]![i]!.isHighlighted = true
-      grid.value[i]![col]!.isHighlighted = true
+    // Si les surbrillances sont activées, mettre en surbrillance la ligne et la colonne
+    if (showHighlights.value) {
+      for (let i = 0; i < GRID_SIZE; i++) {
+        grid.value[row]![i]!.isHighlighted = true
+        grid.value[i]![col]!.isHighlighted = true
+      }
     }
 
     // Forcer Vue à détecter les changements
@@ -420,15 +423,12 @@ export const useTangoStore = defineStore('tango', () => {
     localStorage.removeItem(STORAGE_KEY)
   }
 
-  // Basculer l'affichage des erreurs
-  function toggleShowErrors() {
-    showErrors.value = !showErrors.value
-    if (!showErrors.value) {
-      // Effacer toutes les erreurs visuelles
-      clearErrorsDisplay()
-    } else {
-      // Afficher les erreurs immédiatement
-      updateErrorsDisplay()
+  // Basculer l'affichage des surbrillances
+  function toggleShowHighlights() {
+    showHighlights.value = !showHighlights.value
+    // Rafraîchir les surbrillances si une cellule est sélectionnée
+    if (selectedCell.value) {
+      highlightRelatedCells(selectedCell.value.row, selectedCell.value.col)
     }
   }
 
@@ -445,6 +445,7 @@ export const useTangoStore = defineStore('tango', () => {
     hintsUsed,
     selectedCell,
     showErrors,
+    showHighlights,
     errorsCount,
     totalPauseTime,
 
@@ -465,6 +466,6 @@ export const useTangoStore = defineStore('tango', () => {
     saveGame,
     loadGame,
     resetGame,
-    toggleShowErrors
+    toggleShowHighlights
   }
 })
