@@ -129,14 +129,28 @@ export const useTangoStore = defineStore('tango', () => {
     startTime.value = Date.now() - elapsedTime.value
   }
 
-  // Sélectionner une cellule
+  // Sélectionner une cellule et toggle le symbole (vide → lune → soleil → vide)
   function selectCell(row: number, col: number) {
     if (grid.value[row]![col]!.isInitial || isCompleted.value) {
-      selectedCell.value = null
       return
     }
+
+    const cell = grid.value[row]![col]!
+
+    // Toggle cyclique : vide → lune → soleil → vide
+    if (cell.value === TangoSymbol.EMPTY) {
+      cell.value = TangoSymbol.MOON
+    } else if (cell.value === TangoSymbol.MOON) {
+      cell.value = TangoSymbol.SUN
+    } else {
+      cell.value = TangoSymbol.EMPTY
+    }
+
     selectedCell.value = { row, col }
     highlightRelatedCells(row, col)
+    updateErrors()
+    checkCompletion()
+    saveGame()
   }
 
   // Mettre en surbrillance les cellules liées

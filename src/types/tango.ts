@@ -1,8 +1,8 @@
 // Symboles possibles dans une cellule Tango
 export const enum TangoSymbol {
   EMPTY = '',
-  SUN = '☀️',
-  MOON = '🌙'
+  MOON = '●', // Cercle plein stylisé en bleu foncé
+  SUN = '☀️'
 }
 
 // Types de contraintes entre cellules

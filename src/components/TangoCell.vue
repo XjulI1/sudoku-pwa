@@ -30,7 +30,9 @@ const displaySymbol = computed(() => {
 
 <template>
   <div :class="cellClass" @click="emit('select', row, col)">
-    <div v-if="displaySymbol" class="cell-value">{{ displaySymbol }}</div>
+    <div v-if="displaySymbol" class="cell-value" :class="{ moon: cell.value === TangoSymbol.MOON }">
+      {{ displaySymbol }}
+    </div>
   </div>
 </template>
 
@@ -77,6 +79,11 @@ const displaySymbol = computed(() => {
 
 .cell-value {
   font-size: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.cell-value.moon {
+  color: #1e3a8a; /* Bleu foncé pour la lune */
+  text-shadow: 0 0 2px rgba(30, 58, 138, 0.5);
 }
 
 @media (max-width: 640px) {

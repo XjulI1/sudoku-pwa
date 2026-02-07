@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useTangoStore } from '@/stores/tango'
-import { TangoSymbol } from '@/types/tango'
 
 const store = useTangoStore()
 
@@ -9,13 +8,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
   const key = event.key.toLowerCase()
 
-  if (key === 's') {
-    // S pour Soleil/Sun
-    store.handleSymbolInput(TangoSymbol.SUN)
-  } else if (key === 'm' || key === 'l') {
-    // M pour Moon ou L pour Lune
-    store.handleSymbolInput(TangoSymbol.MOON)
-  } else if (key === 'backspace' || key === 'delete') {
+  if (key === 'backspace' || key === 'delete') {
     store.clearSelectedCell()
   }
 }
@@ -28,25 +21,13 @@ if (typeof window !== 'undefined') {
 
 <template>
   <div class="tango-controls">
-    <div class="symbol-buttons">
-      <button
-        class="symbol-btn sun-btn"
-        :class="{ disabled: store.isCompleted || store.isPaused }"
-        @click="store.handleSymbolInput(TangoSymbol.SUN)"
-        :disabled="store.isCompleted || store.isPaused"
-        title="Soleil (touche S)"
-      >
-        ☀️ Soleil
-      </button>
-      <button
-        class="symbol-btn moon-btn"
-        :class="{ disabled: store.isCompleted || store.isPaused }"
-        @click="store.handleSymbolInput(TangoSymbol.MOON)"
-        :disabled="store.isCompleted || store.isPaused"
-        title="Lune (touche M ou L)"
-      >
-        🌙 Lune
-      </button>
+    <div class="instructions">
+      <p class="instruction-text">
+        <span class="symbol-demo">●</span> →
+        <span class="symbol-demo sun">☀️</span> →
+        <span class="symbol-demo empty">vide</span>
+      </p>
+      <p class="instruction-subtitle">Cliquez sur une case pour alterner entre les symboles</p>
     </div>
 
     <div class="action-buttons">
@@ -54,6 +35,7 @@ if (typeof window !== 'undefined') {
         class="action-btn"
         @click="store.clearSelectedCell"
         :disabled="store.isCompleted || store.isPaused"
+        title="Effacer (Backspace ou Delete)"
       >
         ❌ Effacer
       </button>
@@ -78,53 +60,49 @@ if (typeof window !== 'undefined') {
   margin: 0 auto;
 }
 
-.symbol-buttons {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+.instructions {
+  background: var(--cell-bg);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
 }
 
-.symbol-btn {
-  padding: 1.5rem;
-  font-size: clamp(1.5rem, 5vw, 2rem);
+.instruction-text {
+  font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 600;
-  border: 3px solid var(--border-light);
-  background-color: var(--btn-bg);
-  color: var(--text);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  touch-action: manipulation;
+  margin: 0 0 0.5rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
-.symbol-btn:hover:not(:disabled) {
-  background-color: var(--btn-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.symbol-demo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.symbol-btn:active:not(:disabled) {
-  transform: translateY(0);
+.symbol-demo:first-child {
+  color: #1e3a8a;
+  font-size: 1.8em;
 }
 
-.symbol-btn.disabled,
-.symbol-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.symbol-demo.sun {
+  font-size: 1.8em;
 }
 
-.sun-btn:hover:not(:disabled) {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+.symbol-demo.empty {
+  font-size: 0.9em;
+  opacity: 0.7;
+  font-style: italic;
 }
 
-.moon-btn:hover:not(:disabled) {
-  border-color: #6366f1;
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+.instruction-subtitle {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .action-buttons {
@@ -169,13 +147,13 @@ if (typeof window !== 'undefined') {
     padding: 0.5rem;
   }
 
-  .symbol-buttons {
-    gap: 0.5rem;
+  .instructions {
+    padding: 1rem;
   }
 
-  .symbol-btn {
-    padding: 1rem;
-    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  .instruction-text {
+    font-size: clamp(1.25rem, 3.5vw, 1.5rem);
+    gap: 0.75rem;
   }
 
   .action-buttons {
