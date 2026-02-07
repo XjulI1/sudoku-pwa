@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
   <div class="tango-controls">
     <div class="instructions">
       <p class="instruction-text">
-        <span class="symbol-demo">●</span> →
+        <span class="symbol-demo">🌑</span> →
         <span class="symbol-demo sun">☀️</span> →
         <span class="symbol-demo empty">vide</span>
       </p>

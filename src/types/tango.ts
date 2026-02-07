@@ -1,7 +1,7 @@
 // Symboles possibles dans une cellule Tango
 export const enum TangoSymbol {
   EMPTY = '',
-  MOON = '●', // Cercle plein stylisé en bleu foncé
+  MOON = '🌑', // Nouvelle lune (noir)
   SUN = '☀️'
 }
 

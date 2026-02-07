@@ -30,7 +30,7 @@ const displaySymbol = computed(() => {
 
 <template>
   <div :class="cellClass" @click="emit('select', row, col)">
-    <div v-if="displaySymbol" class="cell-value" :class="{ moon: cell.value === TangoSymbol.MOON }">
+    <div v-if="displaySymbol" class="cell-value">
       {{ displaySymbol }}
     </div>
   </div>
