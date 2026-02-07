@@ -1,27 +1,54 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { useSudokuStore } from '@/stores/sudoku'
+import { useTangoStore } from '@/stores/tango'
 import DifficultySelector from '@/components/DifficultySelector.vue'
 import GameHeader from '@/components/GameHeader.vue'
 import SudokuGrid from '@/components/SudokuGrid.vue'
 import GameControls from '@/components/GameControls.vue'
+import TangoHeader from '@/components/TangoHeader.vue'
+import TangoGrid from '@/components/TangoGrid.vue'
+import TangoControls from '@/components/TangoControls.vue'
 import Statistics from '@/components/Statistics.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 
-const store = useSudokuStore()
+type GameType = 'sudoku' | 'tango'
+
+const sudokuStore = useSudokuStore()
+const tangoStore = useTangoStore()
+const currentGameType = ref<GameType>('sudoku')
 const showMenu = ref(false)
 const showStats = ref(false)
 const showConfirmNewGame = ref(false)
 
-const hasActiveGame = computed(() => store.grid.length > 0)
+const hasActiveGame = computed(() => {
+  if (currentGameType.value === 'sudoku') {
+    return sudokuStore.grid.length > 0
+  } else {
+    return tangoStore.grid.length > 0
+  }
+})
 
 onMounted(() => {
-  // Essayer de charger une partie sauvegardée
-  const loaded = store.loadGame()
-  if (!loaded) {
+  // Essayer de charger une partie sauvegardée Sudoku
+  const sudokuLoaded = sudokuStore.loadGame()
+  const tangoLoaded = tangoStore.loadGame()
+
+  if (sudokuLoaded) {
+    currentGameType.value = 'sudoku'
+    showMenu.value = false
+  } else if (tangoLoaded) {
+    currentGameType.value = 'tango'
+    showMenu.value = false
+  } else {
     showMenu.value = true
   }
 })
+
+const handleStart = (gameType: GameType) => {
+  currentGameType.value = gameType
+  showMenu.value = false
+}
 
 const startNewGameFromMenu = () => {
   if (hasActiveGame.value) {
@@ -32,7 +59,11 @@ const startNewGameFromMenu = () => {
 }
 
 const confirmNewGame = () => {
-  store.resetGame()
+  if (currentGameType.value === 'sudoku') {
+    sudokuStore.resetGame()
+  } else {
+    tangoStore.resetGame()
+  }
   showMenu.value = true
 }
 
@@ -48,13 +79,23 @@ const closeStats = () => {
 <template>
   <div class="app">
     <div v-if="showMenu || !hasActiveGame" class="menu-view">
-      <DifficultySelector @start="showMenu = false" @show-stats="openStats" />
+      <DifficultySelector @start="handleStart" @show-stats="openStats" />
     </div>
 
     <div v-else class="game-view">
-      <GameHeader @new-game="startNewGameFromMenu" />
-      <SudokuGrid />
-      <GameControls />
+      <!-- Sudoku Game -->
+      <template v-if="currentGameType === 'sudoku'">
+        <GameHeader @new-game="startNewGameFromMenu" />
+        <SudokuGrid />
+        <GameControls />
+      </template>
+
+      <!-- Tango Game -->
+      <template v-else>
+        <TangoHeader @new-game="startNewGameFromMenu" />
+        <TangoGrid />
+        <TangoControls />
+      </template>
     </div>
 
     <Statistics v-if="showStats" @close="closeStats" />

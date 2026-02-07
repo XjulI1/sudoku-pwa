@@ -1,35 +1,41 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { Grid, Position } from '@/types/sudoku'
-import { Difficulty, GridSize } from '@/types/sudoku'
-import { SudokuGenerator } from '@/utils/sudokuGenerator'
-import { SudokuValidator } from '@/utils/sudokuValidator'
-import { StatsManager } from '@/utils/statsManager'
+import { ref, computed, triggerRef } from 'vue'
+import {
+  TangoSymbol,
+  TangoDifficulty,
+  type TangoGrid,
+  type TangoPosition,
+  type TangoConstraint
+} from '@/types/tango'
+import { TangoGenerator } from '@/utils/tangoGenerator'
+import { TangoValidator } from '@/utils/tangoValidator'
+import { TangoStatsManager } from '@/utils/tangoStatsManager'
 
-const STORAGE_KEY = 'sudoku-game-state'
+const STORAGE_KEY = 'tango-game-state'
+const GRID_SIZE = 6
 
-export const useSudokuStore = defineStore('sudoku', () => {
+export const useTangoStore = defineStore('tango', () => {
   // État
-  const grid = ref<Grid>([])
-  const solution = ref<number[][]>([])
-  const difficulty = ref<Difficulty>(Difficulty.NORMAL)
-  const gridSize = ref<GridSize>(GridSize.NINE)
+  const grid = ref<TangoGrid>([])
+  const solution = ref<TangoSymbol[][]>([])
+  const constraints = ref<TangoConstraint[]>([])
+  const difficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
   const startTime = ref<number>(0)
   const elapsedTime = ref<number>(0)
   const isCompleted = ref(false)
   const isPaused = ref(false)
   const hintsUsed = ref(0)
-  const selectedCell = ref<Position | null>(null)
-  const noteMode = ref(false)
+  const selectedCell = ref<TangoPosition | null>(null)
   const showErrors = ref(true)
   const showHighlights = ref(true)
   const errorsCount = ref(0)
-  const notesUsed = ref(0)
   const totalPauseTime = ref(0)
   const lastPauseStart = ref<number | null>(null)
 
   // Timer
   let timerInterval: number | null = null
+  // Timeout pour le comptage des erreurs (avec délai)
+  let errorCountTimeout: number | null = null
 
   // Computed
   const formattedTime = computed(() => {
@@ -42,12 +48,11 @@ export const useSudokuStore = defineStore('sudoku', () => {
   const progress = computed(() => {
     let filled = 0
     let total = 0
-    const size = grid.value.length
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
         if (!grid.value[row]![col]!.isInitial) {
           total++
-          if (grid.value[row]![col]!.value !== null) {
+          if (grid.value[row]![col]!.value !== TangoSymbol.EMPTY) {
             filled++
           }
         }
@@ -57,11 +62,10 @@ export const useSudokuStore = defineStore('sudoku', () => {
   })
 
   // Initialisation de la grille vide
-  function createEmptyGrid(size: number): Grid {
-    return Array.from({ length: size }, () =>
-      Array.from({ length: size }, () => ({
-        value: null,
-        notes: new Set<number>(),
+  function createEmptyGrid(): TangoGrid {
+    return Array.from({ length: GRID_SIZE }, () =>
+      Array.from({ length: GRID_SIZE }, () => ({
+        value: TangoSymbol.EMPTY,
         isInitial: false,
         isError: false,
         isHighlighted: false
@@ -70,19 +74,19 @@ export const useSudokuStore = defineStore('sudoku', () => {
   }
 
   // Démarre un nouveau jeu
-  function newGame(newDifficulty: Difficulty, newGridSize: GridSize = GridSize.NINE) {
+  function newGame(newDifficulty: TangoDifficulty) {
     difficulty.value = newDifficulty
-    gridSize.value = newGridSize
-    const generator = new SudokuGenerator(newGridSize)
-    const { puzzle, solution: sol } = generator.generate(newDifficulty)
+    const generator = new TangoGenerator()
+    const { puzzle, solution: sol, constraints: cons } = generator.generate(newDifficulty)
 
     solution.value = sol
-    grid.value = createEmptyGrid(newGridSize)
+    constraints.value = cons
+    grid.value = createEmptyGrid()
 
     // Remplir la grille avec le puzzle
-    for (let row = 0; row < newGridSize; row++) {
-      for (let col = 0; col < newGridSize; col++) {
-        if (puzzle[row]![col] !== 0) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        if (puzzle[row]![col] !== TangoSymbol.EMPTY) {
           grid.value[row]![col]!.value = puzzle[row]![col]!
           grid.value[row]![col]!.isInitial = true
         }
@@ -95,12 +99,9 @@ export const useSudokuStore = defineStore('sudoku', () => {
     isPaused.value = false
     hintsUsed.value = 0
     selectedCell.value = null
-    noteMode.value = false
     errorsCount.value = 0
-    notesUsed.value = 0
     totalPauseTime.value = 0
     lastPauseStart.value = null
-    showHighlights.value = newDifficulty === Difficulty.SIMPLE || newDifficulty === Difficulty.NORMAL
 
     startTimer()
     saveGame()
@@ -132,61 +133,62 @@ export const useSudokuStore = defineStore('sudoku', () => {
     startTime.value = Date.now() - elapsedTime.value
   }
 
-  // Sélectionner une cellule
+  // Sélectionner une cellule et toggle le symbole (vide → soleil → lune → vide)
   function selectCell(row: number, col: number) {
     if (grid.value[row]![col]!.isInitial || isCompleted.value) {
-      selectedCell.value = null
       return
     }
+
+    const cell = grid.value[row]![col]!
+
+    // Toggle cyclique : vide → soleil → lune → vide
+    if (cell.value === TangoSymbol.EMPTY) {
+      cell.value = TangoSymbol.SUN
+    } else if (cell.value === TangoSymbol.SUN) {
+      cell.value = TangoSymbol.MOON
+    } else {
+      cell.value = TangoSymbol.EMPTY
+    }
+
     selectedCell.value = { row, col }
     highlightRelatedCells(row, col)
+    updateErrors()
+    checkCompletion()
+    saveGame()
   }
 
   // Mettre en surbrillance les cellules liées
   function highlightRelatedCells(row: number, col: number) {
-    const size = grid.value.length
-    const regionRows = gridSize.value === GridSize.SIX ? 2 : 3
-    const regionCols = gridSize.value === GridSize.SIX ? 3 : 3
-
-    // Toujours désactiver tous les surbrillances d'abord
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
+    // Désactiver tous les surbrillances d'abord
+    for (let r = 0; r < GRID_SIZE; r++) {
+      for (let c = 0; c < GRID_SIZE; c++) {
         grid.value[r]![c]!.isHighlighted = false
       }
     }
 
-    // Si la surbrillance est désactivée, ne rien faire de plus
-    if (!showHighlights.value) return
-
-    // Ligne et colonne
-    for (let i = 0; i < size; i++) {
-      grid.value[row]![i]!.isHighlighted = true
-      grid.value[i]![col]!.isHighlighted = true
-    }
-
-    // Région
-    const startRow = row - (row % regionRows)
-    const startCol = col - (col % regionCols)
-    for (let i = 0; i < regionRows; i++) {
-      for (let j = 0; j < regionCols; j++) {
-        grid.value[startRow + i]![startCol + j]!.isHighlighted = true
+    // Si les surbrillances sont activées, mettre en surbrillance la ligne et la colonne
+    if (showHighlights.value) {
+      for (let i = 0; i < GRID_SIZE; i++) {
+        grid.value[row]![i]!.isHighlighted = true
+        grid.value[i]![col]!.isHighlighted = true
       }
     }
+
+    // Forcer Vue à détecter les changements
+    triggerRef(grid)
   }
 
   // Définir la valeur d'une cellule
-  function setCellValue(row: number, col: number, value: number | null) {
+  function setCellValue(row: number, col: number, symbol: TangoSymbol) {
     if (grid.value[row]![col]!.isInitial || isCompleted.value) return
 
     const cell = grid.value[row]![col]!
-    const hadNotes = cell.notes.size > 0
 
-    cell.value = value
-    cell.notes.clear()
-
-    // Compter les notes utilisées (nombre total de notes ajoutées)
-    if (hadNotes) {
-      notesUsed.value += 1
+    // Si la cellule a déjà cette valeur, on la vide
+    if (cell.value === symbol) {
+      cell.value = TangoSymbol.EMPTY
+    } else {
+      cell.value = symbol
     }
 
     updateErrors()
@@ -194,32 +196,12 @@ export const useSudokuStore = defineStore('sudoku', () => {
     saveGame()
   }
 
-  // Basculer une note
-  function toggleNote(row: number, col: number, note: number) {
-    if (grid.value[row]![col]!.isInitial || isCompleted.value) return
-    if (grid.value[row]![col]!.value !== null) return
-
-    const cell = grid.value[row]![col]!
-    if (cell.notes.has(note)) {
-      cell.notes.delete(note)
-    } else {
-      cell.notes.add(note)
-      notesUsed.value += 1
-    }
-
-    saveGame()
-  }
-
-  // Gérer l'entrée d'un nombre
-  function handleNumberInput(num: number) {
-    if (!selectedCell.value) return
+  // Gérer l'entrée d'un symbole
+  function handleSymbolInput(symbol: TangoSymbol) {
+    if (!selectedCell.value || symbol === TangoSymbol.EMPTY) return
 
     const { row, col } = selectedCell.value
-    if (noteMode.value) {
-      toggleNote(row, col, num)
-    } else {
-      setCellValue(row, col, num)
-    }
+    setCellValue(row, col, symbol)
   }
 
   // Effacer la cellule sélectionnée
@@ -229,37 +211,58 @@ export const useSudokuStore = defineStore('sudoku', () => {
     const { row, col } = selectedCell.value
     if (grid.value[row]![col]!.isInitial) return
 
-    grid.value[row]![col]!.value = null
-    grid.value[row]![col]!.notes.clear()
+    grid.value[row]![col]!.value = TangoSymbol.EMPTY
 
     updateErrors()
     saveGame()
   }
 
-  // Mettre à jour les erreurs
-  function updateErrors() {
-    const size = grid.value.length
+  // Mettre à jour l'affichage visuel des erreurs (immédiat)
+  function updateErrorsDisplay() {
     if (!showErrors.value) {
-      for (let row = 0; row < size; row++) {
-        for (let col = 0; col < size; col++) {
+      for (let row = 0; row < GRID_SIZE; row++) {
+        for (let col = 0; col < GRID_SIZE; col++) {
           grid.value[row]![col]!.isError = false
         }
       }
+      triggerRef(grid)
+      return
+    }
+
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        const cell = grid.value[row]![col]!
+        if (cell.value !== TangoSymbol.EMPTY && !cell.isInitial) {
+          const isError = !TangoValidator.isValidMove(
+            grid.value,
+            row,
+            col,
+            cell.value,
+            constraints.value
+          )
+          cell.isError = isError
+        } else {
+          cell.isError = false
+        }
+      }
+    }
+
+    // Forcer Vue à détecter les changements sur les propriétés imbriquées
+    triggerRef(grid)
+  }
+
+  // Compter les erreurs et mettre à jour le compteur (retardé)
+  function countErrors() {
+    if (!showErrors.value) {
       return
     }
 
     let currentErrors = 0
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
         const cell = grid.value[row]![col]!
-        if (cell.value !== null && !cell.isInitial) {
-          const isError = !SudokuValidator.isValidMove(grid.value, row, col, cell.value)
-          cell.isError = isError
-          if (isError) {
-            currentErrors++
-          }
-        } else {
-          cell.isError = false
+        if (cell.isError) {
+          currentErrors++
         }
       }
     }
@@ -270,23 +273,50 @@ export const useSudokuStore = defineStore('sudoku', () => {
     }
   }
 
+  // Effacer l'affichage visuel des erreurs
+  function clearErrorsDisplay() {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        grid.value[row]![col]!.isError = false
+      }
+    }
+    // Forcer Vue à détecter les changements
+    triggerRef(grid)
+  }
+
+  // Mettre à jour les erreurs avec délai (affichage et comptage)
+  function updateErrors() {
+    // Effacer les erreurs visuelles immédiatement
+    clearErrorsDisplay()
+
+    // Annuler le timeout précédent
+    if (errorCountTimeout !== null) {
+      clearTimeout(errorCountTimeout)
+    }
+
+    // Afficher les erreurs et les compter après 1 seconde d'inactivité
+    errorCountTimeout = window.setTimeout(() => {
+      updateErrorsDisplay()
+      countErrors()
+      errorCountTimeout = null
+    }, 1000)
+  }
+
   // Vérifier si le jeu est terminé
   function checkCompletion() {
-    if (SudokuValidator.isFilled(grid.value)) {
-      if (SudokuValidator.isComplete(grid.value, solution.value)) {
+    if (TangoValidator.isFilled(grid.value)) {
+      if (TangoValidator.isComplete(grid.value, solution.value)) {
         isCompleted.value = true
         if (timerInterval !== null) {
           clearInterval(timerInterval)
         }
 
         // Enregistrer les statistiques de la partie
-        StatsManager.saveGameStats(
+        TangoStatsManager.saveGameStats(
           difficulty.value,
-          gridSize.value,
           elapsedTime.value,
           errorsCount.value,
           hintsUsed.value,
-          notesUsed.value,
           totalPauseTime.value
         )
       }
@@ -297,12 +327,14 @@ export const useSudokuStore = defineStore('sudoku', () => {
   function getHint() {
     if (isCompleted.value) return
 
-    const size = grid.value.length
     // Trouver une cellule vide
-    const emptyCells: Position[] = []
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
-        if (!grid.value[row]![col]!.isInitial && grid.value[row]![col]!.value === null) {
+    const emptyCells: TangoPosition[] = []
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        if (
+          !grid.value[row]![col]!.isInitial &&
+          grid.value[row]![col]!.value === TangoSymbol.EMPTY
+        ) {
           emptyCells.push({ row, col })
         }
       }
@@ -316,7 +348,6 @@ export const useSudokuStore = defineStore('sudoku', () => {
 
     // Révéler la solution
     grid.value[row]![col]!.value = solution.value[row]![col]!
-    grid.value[row]![col]!.notes.clear()
 
     hintsUsed.value++
     updateErrors()
@@ -327,21 +358,15 @@ export const useSudokuStore = defineStore('sudoku', () => {
   // Sauvegarder le jeu
   function saveGame() {
     const state = {
-      grid: grid.value.map((row) =>
-        row.map((cell) => ({
-          ...cell,
-          notes: Array.from(cell.notes)
-        }))
-      ),
+      grid: grid.value,
       solution: solution.value,
+      constraints: constraints.value,
       difficulty: difficulty.value,
-      gridSize: gridSize.value,
       startTime: startTime.value,
       elapsedTime: elapsedTime.value,
       isCompleted: isCompleted.value,
       hintsUsed: hintsUsed.value,
       errorsCount: errorsCount.value,
-      notesUsed: notesUsed.value,
       totalPauseTime: totalPauseTime.value
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -354,21 +379,15 @@ export const useSudokuStore = defineStore('sudoku', () => {
 
     try {
       const state = JSON.parse(saved)
-      grid.value = state.grid.map((row: unknown[]) =>
-        (row as Array<{ notes: number[] }>).map((cell) => ({
-          ...cell,
-          notes: new Set(cell.notes)
-        }))
-      )
+      grid.value = state.grid
       solution.value = state.solution
+      constraints.value = state.constraints
       difficulty.value = state.difficulty
-      gridSize.value = state.gridSize || GridSize.NINE
       startTime.value = Date.now() - state.elapsedTime
       elapsedTime.value = state.elapsedTime
       isCompleted.value = state.isCompleted
       hintsUsed.value = state.hintsUsed
       errorsCount.value = state.errorsCount || 0
-      notesUsed.value = state.notesUsed || 0
       totalPauseTime.value = state.totalPauseTime || 0
       isPaused.value = false
       selectedCell.value = null
@@ -391,37 +410,43 @@ export const useSudokuStore = defineStore('sudoku', () => {
     }
     grid.value = []
     solution.value = []
+    constraints.value = []
     startTime.value = 0
     elapsedTime.value = 0
     isCompleted.value = false
     isPaused.value = false
     hintsUsed.value = 0
     selectedCell.value = null
-    noteMode.value = false
     errorsCount.value = 0
-    notesUsed.value = 0
     totalPauseTime.value = 0
     lastPauseStart.value = null
     localStorage.removeItem(STORAGE_KEY)
+  }
+
+  // Basculer l'affichage des surbrillances
+  function toggleShowHighlights() {
+    showHighlights.value = !showHighlights.value
+    // Rafraîchir les surbrillances si une cellule est sélectionnée
+    if (selectedCell.value) {
+      highlightRelatedCells(selectedCell.value.row, selectedCell.value.col)
+    }
   }
 
   return {
     // État
     grid,
     solution,
+    constraints,
     difficulty,
-    gridSize,
     startTime,
     elapsedTime,
     isCompleted,
     isPaused,
     hintsUsed,
     selectedCell,
-    noteMode,
     showErrors,
     showHighlights,
     errorsCount,
-    notesUsed,
     totalPauseTime,
 
     // Computed
@@ -434,13 +459,13 @@ export const useSudokuStore = defineStore('sudoku', () => {
     resumeGame,
     selectCell,
     setCellValue,
-    toggleNote,
-    handleNumberInput,
+    handleSymbolInput,
     clearSelectedCell,
     updateErrors,
     getHint,
     saveGame,
     loadGame,
-    resetGame
+    resetGame,
+    toggleShowHighlights
   }
 })

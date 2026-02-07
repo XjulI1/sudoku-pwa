@@ -1,0 +1,200 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run type check
+        run: yarn type-check
+
+      - name: Run linter
+        run: yarn lint
+
+      - name: Build application
+        run: yarn build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  release-pr:
+    name: Create Pre-Release (PR)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Create release archive
+        run: |
+          cd dist
+          zip -r ../sudoku-pwa-pr-${{ github.event.pull_request.number }}.zip .
+          cd ..
+
+      - name: Generate tag name
+        id: tag
+        run: |
+          SHORT_SHA=$(echo ${{ github.event.pull_request.head.sha }} | cut -c1-7)
+          TAG="pr-${{ github.event.pull_request.number }}-${SHORT_SHA}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Tag will be: ${TAG}"
+
+      - name: Delete existing pre-release if exists
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ${{ steps.tag.outputs.tag }} --yes --cleanup-tag || true
+
+      - name: Create pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ${{ steps.tag.outputs.tag }} \
+            --title "Pre-release: PR #${{ github.event.pull_request.number }} - ${{ github.event.pull_request.title }}" \
+            --notes "**Pull Request**: #${{ github.event.pull_request.number }}
+          **Branch**: \`${{ github.event.pull_request.head.ref }}\`
+          **Commit**: ${{ github.event.pull_request.head.sha }}
+          **Author**: @${{ github.event.pull_request.user.login }}
+
+          This is a temporary pre-release build for testing purposes.
+
+          ## Changes
+          ${{ github.event.pull_request.body }}
+
+          ---
+          ⚠️ This pre-release will be replaced when the PR is updated." \
+            --prerelease \
+            sudoku-pwa-pr-${{ github.event.pull_request.number }}.zip
+
+  release-stable:
+    name: Create Stable Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Get latest version tag
+        id: get_version
+        run: |
+          # Get the latest version tag (v*.*.*)
+          LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            # No version tags exist, start with v1.0.0
+            NEW_VERSION="v1.0.0"
+          else
+            # Increment patch version
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+            MAJOR="${VERSION_PARTS[0]}"
+            MINOR="${VERSION_PARTS[1]}"
+            PATCH="${VERSION_PARTS[2]}"
+
+            # Increment patch version
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "New version will be: ${NEW_VERSION}"
+
+      - name: Create release archive
+        run: |
+          cd dist
+          zip -r ../sudoku-pwa-${{ steps.get_version.outputs.version }}.zip .
+          cd ..
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get commits since last tag
+          LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # Save to file to preserve newlines
+          cat > release_notes.md <<EOF
+          ## 🎮 Sudoku & Tango PWA - Version ${{ steps.get_version.outputs.version }}
+
+          ### 📦 What's New
+
+          ${COMMITS}
+
+          ### 🚀 Installation
+
+          Download the \`sudoku-pwa-${{ steps.get_version.outputs.version }}.zip\` file and extract it to your web server.
+
+          ### 🎯 Features
+
+          - Sudoku game with multiple difficulty levels
+          - Tango puzzle game (Sun & Moon symbols)
+          - PWA support (works offline)
+          - Dark mode support
+          - Statistics tracking
+          - Auto-save functionality
+
+          ---
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...${{ steps.get_version.outputs.version }}
+          EOF
+
+      - name: Create stable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ${{ steps.get_version.outputs.version }} \
+            --title "Release ${{ steps.get_version.outputs.version }}" \
+            --notes-file release_notes.md \
+            --latest \
+            sudoku-pwa-${{ steps.get_version.outputs.version }}.zip
