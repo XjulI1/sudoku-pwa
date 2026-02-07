@@ -411,6 +411,18 @@ export const useTangoStore = defineStore('tango', () => {
     localStorage.removeItem(STORAGE_KEY)
   }
 
+  // Basculer l'affichage des erreurs
+  function toggleShowErrors() {
+    showErrors.value = !showErrors.value
+    if (!showErrors.value) {
+      // Effacer toutes les erreurs visuelles
+      clearErrorsDisplay()
+    } else {
+      // Afficher les erreurs immédiatement
+      updateErrorsDisplay()
+    }
+  }
+
   return {
     // État
     grid,
@@ -443,6 +455,7 @@ export const useTangoStore = defineStore('tango', () => {
     getHint,
     saveGame,
     loadGame,
-    resetGame
+    resetGame,
+    toggleShowErrors
   }
 })

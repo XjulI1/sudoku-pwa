@@ -46,6 +46,14 @@ if (typeof window !== 'undefined') {
       >
         💡 Indice
       </button>
+      <button
+        class="action-btn errors-btn"
+        @click="store.toggleShowErrors"
+        :class="{ active: !store.showErrors }"
+        title="Masquer/Afficher les erreurs"
+      >
+        {{ store.showErrors ? '👁️ Erreurs' : '🔒 Mode zen' }}
+      </button>
     </div>
   </div>
 </template>
@@ -106,7 +114,7 @@ if (typeof window !== 'undefined') {
 
 .action-buttons {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
 }
 
@@ -138,6 +146,18 @@ if (typeof window !== 'undefined') {
 .hint-btn:hover:not(:disabled) {
   background-color: var(--warning);
   border-color: var(--warning);
+  color: white;
+}
+
+.errors-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.errors-btn:hover:not(:disabled) {
+  background-color: var(--primary);
+  border-color: var(--primary);
   color: white;
 }
 
