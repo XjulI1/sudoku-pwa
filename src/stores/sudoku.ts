@@ -355,7 +355,7 @@ export const useSudokuStore = defineStore('sudoku', () => {
     try {
       const state = JSON.parse(saved)
       grid.value = state.grid.map((row: unknown[]) =>
-        row.map((cell: { notes: number[] }) => ({
+        (row as Array<{ notes: number[] }>).map((cell) => ({
           ...cell,
           notes: new Set(cell.notes)
         }))

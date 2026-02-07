@@ -1,7 +1,84 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+import { Difficulty, GridSize } from '@/types/sudoku'
+import { StatsManager } from '@/utils/statsManager'
+
 defineOptions({
   name: 'GameStatistics'
 })
+
+defineEmits<{
+  close: []
+}>()
+
+const difficulties = [
+  { value: Difficulty.SIMPLE, label: 'Simple' },
+  { value: Difficulty.NORMAL, label: 'Normal' },
+  { value: Difficulty.EXPERT, label: 'Expert' },
+  { value: Difficulty.MAITRE, label: 'Maître' },
+  { value: Difficulty.DIEUX_SUDOKU, label: 'Dieux' },
+]
+
+const gridSizes = [
+  { value: GridSize.SIX, label: '6x6' },
+  { value: GridSize.NINE, label: '9x9' },
+]
+
+const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
+const selectedGridSize = ref<GridSize>(GridSize.NINE)
+
+const totalGamesPlayed = computed(() => StatsManager.getTotalGamesPlayed())
+const bestScore = computed(() => StatsManager.getBestScore())
+
+const currentStats = computed(() => {
+  return StatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
+})
+
+const sortedHistory = computed(() => {
+  if (!currentStats.value) return []
+  return [...currentStats.value.history].sort((a, b) => b.completedAt - a.completedAt)
+})
+
+// Compte le nombre de parties pour une taille de grille donnée
+const getGridSizeCount = (gridSize: GridSize): number => {
+  let total = 0
+  difficulties.forEach((diff) => {
+    const stats = StatsManager.loadDifficultyStats(diff.value, gridSize)
+    if (stats) {
+      total += stats.gamesPlayed
+    }
+  })
+  return total
+}
+
+// Compte le nombre de parties pour une difficulté et taille données
+const getDifficultyCount = (difficulty: Difficulty, gridSize: GridSize): number => {
+  const stats = StatsManager.loadDifficultyStats(difficulty, gridSize)
+  return stats?.gamesPlayed || 0
+}
+
+function formatTime(milliseconds: number): string {
+  return StatsManager.formatTime(milliseconds)
+}
+
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return "Aujourd'hui"
+  if (diffDays === 1) return 'Hier'
+  if (diffDays < 7) return `Il y a ${diffDays}j`
+
+  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+}
+
+function getScoreClass(score: number): string {
+  if (score >= 9) return 'excellent'
+  if (score >= 7) return 'good'
+  if (score >= 5) return 'average'
+  return 'poor'
+}
 </script>
 
 <template>
@@ -112,85 +189,6 @@ defineOptions({
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Difficulty, GridSize } from '@/types/sudoku'
-import { StatsManager } from '@/utils/statsManager'
-
-defineEmits<{
-  close: []
-}>()
-
-const difficulties = [
-  { value: Difficulty.SIMPLE, label: 'Simple' },
-  { value: Difficulty.NORMAL, label: 'Normal' },
-  { value: Difficulty.EXPERT, label: 'Expert' },
-  { value: Difficulty.MAITRE, label: 'Maître' },
-  { value: Difficulty.DIEUX_SUDOKU, label: 'Dieux' },
-]
-
-const gridSizes = [
-  { value: GridSize.SIX, label: '6x6' },
-  { value: GridSize.NINE, label: '9x9' },
-]
-
-const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
-const selectedGridSize = ref<GridSize>(GridSize.NINE)
-
-const totalGamesPlayed = computed(() => StatsManager.getTotalGamesPlayed())
-const bestScore = computed(() => StatsManager.getBestScore())
-
-const currentStats = computed(() => {
-  return StatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
-})
-
-const sortedHistory = computed(() => {
-  if (!currentStats.value) return []
-  return [...currentStats.value.history].sort((a, b) => b.completedAt - a.completedAt)
-})
-
-// Compte le nombre de parties pour une taille de grille donnée
-const getGridSizeCount = (gridSize: GridSize): number => {
-  let total = 0
-  difficulties.forEach((diff) => {
-    const stats = StatsManager.loadDifficultyStats(diff.value, gridSize)
-    if (stats) {
-      total += stats.gamesPlayed
-    }
-  })
-  return total
-}
-
-// Compte le nombre de parties pour une difficulté et taille données
-const getDifficultyCount = (difficulty: Difficulty, gridSize: GridSize): number => {
-  const stats = StatsManager.loadDifficultyStats(difficulty, gridSize)
-  return stats?.gamesPlayed || 0
-}
-
-function formatTime(milliseconds: number): string {
-  return StatsManager.formatTime(milliseconds)
-}
-
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return "Aujourd'hui"
-  if (diffDays === 1) return 'Hier'
-  if (diffDays < 7) return `Il y a ${diffDays}j`
-
-  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-}
-
-function getScoreClass(score: number): string {
-  if (score >= 9) return 'excellent'
-  if (score >= 7) return 'good'
-  if (score >= 5) return 'average'
-  return 'poor'
-}
-</script>
 
 <style scoped>
 .statistics {
