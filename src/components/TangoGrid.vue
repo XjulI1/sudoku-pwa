@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import TangoCell from './TangoCell.vue'
 import { useTangoStore } from '@/stores/tango'
 import { ConstraintDirection, type TangoConstraint } from '@/types/tango'

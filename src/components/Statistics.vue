@@ -1,3 +1,9 @@
+<script setup lang="ts">
+defineOptions({
+  name: 'GameStatistics'
+})
+</script>
+
 <template>
   <div class="statistics">
     <div class="stats-header">

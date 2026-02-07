@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useSudokuStore } from '@/stores/sudoku'
-import { GridSize } from '@/types/sudoku'
 
 const store = useSudokuStore()
 

@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import SudokuCell from './SudokuCell.vue'
 import { useSudokuStore } from '@/stores/sudoku'
-import { GridSize } from '@/types/sudoku'
 
 const store = useSudokuStore()
 
