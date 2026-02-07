@@ -9,6 +9,7 @@ import {
 } from '@/types/tango'
 import { TangoGenerator } from '@/utils/tangoGenerator'
 import { TangoValidator } from '@/utils/tangoValidator'
+import { TangoStatsManager } from '@/utils/tangoStatsManager'
 
 const STORAGE_KEY = 'tango-game-state'
 const GRID_SIZE = 6
@@ -256,8 +257,14 @@ export const useTangoStore = defineStore('tango', () => {
           clearInterval(timerInterval)
         }
 
-        // TODO: Enregistrer les statistiques de la partie
-        // TangoStatsManager.saveGameStats(...)
+        // Enregistrer les statistiques de la partie
+        TangoStatsManager.saveGameStats(
+          difficulty.value,
+          elapsedTime.value,
+          errorsCount.value,
+          hintsUsed.value,
+          totalPauseTime.value
+        )
       }
     }
   }

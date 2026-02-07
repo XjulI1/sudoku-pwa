@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Difficulty, GridSize } from '@/types/sudoku'
+import { TangoDifficulty } from '@/types/tango'
 import { StatsManager } from '@/utils/statsManager'
+import { TangoStatsManager } from '@/utils/tangoStatsManager'
 
 defineOptions({
   name: 'GameStatistics'
@@ -11,12 +13,22 @@ defineEmits<{
   close: []
 }>()
 
-const difficulties = [
+type GameType = 'sudoku' | 'tango'
+
+const selectedGameType = ref<GameType>('sudoku')
+
+const sudokuDifficulties = [
   { value: Difficulty.SIMPLE, label: 'Simple' },
   { value: Difficulty.NORMAL, label: 'Normal' },
   { value: Difficulty.EXPERT, label: 'Expert' },
   { value: Difficulty.MAITRE, label: 'Maître' },
   { value: Difficulty.DIEUX_SUDOKU, label: 'Dieux' },
+]
+
+const tangoDifficulties = [
+  { value: TangoDifficulty.EASY, label: 'Facile' },
+  { value: TangoDifficulty.MEDIUM, label: 'Moyen' },
+  { value: TangoDifficulty.HARD, label: 'Difficile' },
 ]
 
 const gridSizes = [
@@ -25,13 +37,31 @@ const gridSizes = [
 ]
 
 const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
+const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
-const totalGamesPlayed = computed(() => StatsManager.getTotalGamesPlayed())
-const bestScore = computed(() => StatsManager.getBestScore())
+const totalGamesPlayed = computed(() => {
+  if (selectedGameType.value === 'sudoku') {
+    return StatsManager.getTotalGamesPlayed()
+  } else {
+    return TangoStatsManager.getTotalGamesPlayed()
+  }
+})
+
+const bestScore = computed(() => {
+  if (selectedGameType.value === 'sudoku') {
+    return StatsManager.getBestScore()
+  } else {
+    return TangoStatsManager.getBestScore()
+  }
+})
 
 const currentStats = computed(() => {
-  return StatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
+  if (selectedGameType.value === 'sudoku') {
+    return StatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
+  } else {
+    return TangoStatsManager.loadDifficultyStats(selectedTangoDifficulty.value)
+  }
 })
 
 const sortedHistory = computed(() => {
@@ -39,10 +69,35 @@ const sortedHistory = computed(() => {
   return [...currentStats.value.history].sort((a, b) => b.completedAt - a.completedAt)
 })
 
-// Compte le nombre de parties pour une taille de grille donnée
+const difficulties = computed(() => {
+  if (selectedGameType.value === 'sudoku') {
+    return sudokuDifficulties
+  } else {
+    return tangoDifficulties
+  }
+})
+
+const currentDifficulty = computed({
+  get: () => {
+    if (selectedGameType.value === 'sudoku') {
+      return selectedDifficulty.value
+    } else {
+      return selectedTangoDifficulty.value
+    }
+  },
+  set: (value: Difficulty | TangoDifficulty) => {
+    if (selectedGameType.value === 'sudoku') {
+      selectedDifficulty.value = value as Difficulty
+    } else {
+      selectedTangoDifficulty.value = value as TangoDifficulty
+    }
+  }
+})
+
+// Compte le nombre de parties pour une taille de grille donnée (Sudoku uniquement)
 const getGridSizeCount = (gridSize: GridSize): number => {
   let total = 0
-  difficulties.forEach((diff) => {
+  sudokuDifficulties.forEach((diff) => {
     const stats = StatsManager.loadDifficultyStats(diff.value, gridSize)
     if (stats) {
       total += stats.gamesPlayed
@@ -52,9 +107,14 @@ const getGridSizeCount = (gridSize: GridSize): number => {
 }
 
 // Compte le nombre de parties pour une difficulté et taille données
-const getDifficultyCount = (difficulty: Difficulty, gridSize: GridSize): number => {
-  const stats = StatsManager.loadDifficultyStats(difficulty, gridSize)
-  return stats?.gamesPlayed || 0
+const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty): number => {
+  if (selectedGameType.value === 'sudoku') {
+    const stats = StatsManager.loadDifficultyStats(difficulty as Difficulty, selectedGridSize.value)
+    return stats?.gamesPlayed || 0
+  } else {
+    const stats = TangoStatsManager.loadDifficultyStats(difficulty as TangoDifficulty)
+    return stats?.gamesPlayed || 0
+  }
 }
 
 function formatTime(milliseconds: number): string {
@@ -100,7 +160,24 @@ function getScoreClass(score: number): string {
     </div>
 
     <div class="filter-section">
-      <div class="grid-size-tabs">
+      <div class="game-type-tabs">
+        <button
+          :class="{ active: selectedGameType === 'sudoku' }"
+          @click="selectedGameType = 'sudoku'"
+        >
+          🔢 Sudoku
+          <span class="count">({{ selectedGameType === 'sudoku' ? totalGamesPlayed : StatsManager.getTotalGamesPlayed() }})</span>
+        </button>
+        <button
+          :class="{ active: selectedGameType === 'tango' }"
+          @click="selectedGameType = 'tango'"
+        >
+          ☀️🌑 Tango
+          <span class="count">({{ selectedGameType === 'tango' ? totalGamesPlayed : TangoStatsManager.getTotalGamesPlayed() }})</span>
+        </button>
+      </div>
+
+      <div v-if="selectedGameType === 'sudoku'" class="grid-size-tabs">
         <button
           v-for="size in gridSizes"
           :key="size.value"
@@ -116,11 +193,11 @@ function getScoreClass(score: number): string {
         <button
           v-for="diff in difficulties"
           :key="diff.value"
-          :class="{ active: selectedDifficulty === diff.value }"
-          @click="selectedDifficulty = diff.value"
+          :class="{ active: currentDifficulty === diff.value }"
+          @click="currentDifficulty = diff.value"
         >
           {{ diff.label }}
-          <span class="count">({{ getDifficultyCount(diff.value, selectedGridSize) }})</span>
+          <span class="count">({{ getDifficultyCount(diff.value) }})</span>
         </button>
       </div>
     </div>
@@ -259,6 +336,39 @@ function getScoreClass(score: number): string {
 
 .filter-section {
   margin-bottom: 1.5rem;
+}
+
+.game-type-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.game-type-tabs button {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background: var(--cell-bg);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.game-type-tabs button:hover {
+  background: var(--cell-hover);
+}
+
+.game-type-tabs button.active {
+  background: var(--primary);
+  color: white;
 }
 
 .grid-size-tabs {
