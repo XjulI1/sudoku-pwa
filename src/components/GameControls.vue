@@ -57,6 +57,7 @@ if (typeof window !== 'undefined') {
         class="action-btn"
         @click="store.clearSelectedCell"
         :disabled="store.isCompleted || store.isPaused"
+        title="Effacer (Backspace ou Delete)"
       >
         ❌ Effacer
       </button>
@@ -64,6 +65,7 @@ if (typeof window !== 'undefined') {
         class="action-btn hint-btn"
         @click="store.getHint"
         :disabled="store.isCompleted || store.isPaused"
+        title="Révéler une cellule aléatoire"
       >
         💡 Indice
       </button>

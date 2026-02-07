@@ -99,11 +99,6 @@ const notesGridTemplate = computed(() => {
   font-weight: 600;
 }
 
-.sudoku-cell.error {
-  background-color: var(--cell-error);
-  color: var(--error-text);
-}
-
 .sudoku-cell.highlighted {
   background-color: var(--cell-highlighted);
 }
@@ -113,6 +108,11 @@ const notesGridTemplate = computed(() => {
   outline: 2px solid var(--primary);
   outline-offset: -2px;
   z-index: 1;
+}
+
+.sudoku-cell.error {
+  background-color: var(--cell-error);
+  color: var(--error-text);
 }
 
 .sudoku-cell.thick-right {

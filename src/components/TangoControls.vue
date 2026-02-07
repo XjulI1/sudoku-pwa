@@ -43,16 +43,18 @@ if (typeof window !== 'undefined') {
         class="action-btn hint-btn"
         @click="store.getHint"
         :disabled="store.isCompleted || store.isPaused"
+        title="Révéler une cellule aléatoire"
       >
         💡 Indice
       </button>
       <button
-        class="action-btn highlights-btn"
+        class="action-btn highlight-btn"
+        :class="{ active: store.showHighlights }"
         @click="store.toggleShowHighlights"
-        :class="{ active: !store.showHighlights }"
-        title="Activer/Désactiver les surbrillances"
+        :disabled="store.isCompleted || store.isPaused"
+        title="Activer/Désactiver la surbrillance"
       >
-        {{ store.showHighlights ? '💡 Lumière' : '🌙 Sans lumière' }}
+        ✨ Lumière
       </button>
     </div>
   </div>
@@ -149,16 +151,10 @@ if (typeof window !== 'undefined') {
   color: white;
 }
 
-.highlights-btn.active {
+.action-btn.active {
   background-color: var(--primary);
-  border-color: var(--primary);
   color: white;
-}
-
-.highlights-btn:hover:not(:disabled) {
-  background-color: var(--primary);
   border-color: var(--primary);
-  color: white;
 }
 
 @media (max-width: 640px) {

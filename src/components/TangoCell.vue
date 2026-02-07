@@ -62,10 +62,6 @@ const displaySymbol = computed(() => {
   font-weight: 600;
 }
 
-.tango-cell.error {
-  background-color: var(--cell-error);
-}
-
 .tango-cell.highlighted {
   background-color: var(--cell-highlighted);
 }
@@ -75,6 +71,10 @@ const displaySymbol = computed(() => {
   outline: 2px solid var(--primary);
   outline-offset: -2px;
   z-index: 1;
+}
+
+.tango-cell.error {
+  background-color: var(--cell-error);
 }
 
 .cell-value {
