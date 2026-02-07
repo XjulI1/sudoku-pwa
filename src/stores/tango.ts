@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, triggerRef } from 'vue'
 import {
   TangoSymbol,
   TangoDifficulty,
@@ -170,6 +170,9 @@ export const useTangoStore = defineStore('tango', () => {
       grid.value[row]![i]!.isHighlighted = true
       grid.value[i]![col]!.isHighlighted = true
     }
+
+    // Forcer Vue à détecter les changements
+    triggerRef(grid)
   }
 
   // Définir la valeur d'une cellule
@@ -219,6 +222,7 @@ export const useTangoStore = defineStore('tango', () => {
           grid.value[row]![col]!.isError = false
         }
       }
+      triggerRef(grid)
       return
     }
 
@@ -239,6 +243,9 @@ export const useTangoStore = defineStore('tango', () => {
         }
       }
     }
+
+    // Forcer Vue à détecter les changements sur les propriétés imbriquées
+    triggerRef(grid)
   }
 
   // Compter les erreurs et mettre à jour le compteur (retardé)
@@ -270,6 +277,8 @@ export const useTangoStore = defineStore('tango', () => {
         grid.value[row]![col]!.isError = false
       }
     }
+    // Forcer Vue à détecter les changements
+    triggerRef(grid)
   }
 
   // Mettre à jour les erreurs avec délai (affichage et comptage)
