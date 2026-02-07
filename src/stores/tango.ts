@@ -33,6 +33,8 @@ export const useTangoStore = defineStore('tango', () => {
 
   // Timer
   let timerInterval: number | null = null
+  // Timeout pour le comptage des erreurs (avec délai)
+  let errorCountTimeout: number | null = null
 
   // Computed
   const formattedTime = computed(() => {
@@ -209,8 +211,8 @@ export const useTangoStore = defineStore('tango', () => {
     saveGame()
   }
 
-  // Mettre à jour les erreurs
-  function updateErrors() {
+  // Mettre à jour l'affichage visuel des erreurs (immédiat)
+  function updateErrorsDisplay() {
     if (!showErrors.value) {
       for (let row = 0; row < GRID_SIZE; row++) {
         for (let col = 0; col < GRID_SIZE; col++) {
@@ -220,7 +222,6 @@ export const useTangoStore = defineStore('tango', () => {
       return
     }
 
-    let currentErrors = 0
     for (let row = 0; row < GRID_SIZE; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         const cell = grid.value[row]![col]!
@@ -233,11 +234,25 @@ export const useTangoStore = defineStore('tango', () => {
             constraints.value
           )
           cell.isError = isError
-          if (isError) {
-            currentErrors++
-          }
         } else {
           cell.isError = false
+        }
+      }
+    }
+  }
+
+  // Compter les erreurs et mettre à jour le compteur (retardé)
+  function countErrors() {
+    if (!showErrors.value) {
+      return
+    }
+
+    let currentErrors = 0
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        const cell = grid.value[row]![col]!
+        if (cell.isError) {
+          currentErrors++
         }
       }
     }
@@ -246,6 +261,33 @@ export const useTangoStore = defineStore('tango', () => {
     if (currentErrors > errorsCount.value) {
       errorsCount.value = currentErrors
     }
+  }
+
+  // Effacer l'affichage visuel des erreurs
+  function clearErrorsDisplay() {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        grid.value[row]![col]!.isError = false
+      }
+    }
+  }
+
+  // Mettre à jour les erreurs avec délai (affichage et comptage)
+  function updateErrors() {
+    // Effacer les erreurs visuelles immédiatement
+    clearErrorsDisplay()
+
+    // Annuler le timeout précédent
+    if (errorCountTimeout !== null) {
+      clearTimeout(errorCountTimeout)
+    }
+
+    // Afficher les erreurs et les compter après 1 seconde d'inactivité
+    errorCountTimeout = window.setTimeout(() => {
+      updateErrorsDisplay()
+      countErrors()
+      errorCountTimeout = null
+    }, 1000)
   }
 
   // Vérifier si le jeu est terminé
