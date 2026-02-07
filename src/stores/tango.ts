@@ -129,7 +129,7 @@ export const useTangoStore = defineStore('tango', () => {
     startTime.value = Date.now() - elapsedTime.value
   }
 
-  // Sélectionner une cellule et toggle le symbole (vide → lune → soleil → vide)
+  // Sélectionner une cellule et toggle le symbole (vide → soleil → lune → vide)
   function selectCell(row: number, col: number) {
     if (grid.value[row]![col]!.isInitial || isCompleted.value) {
       return
@@ -137,11 +137,11 @@ export const useTangoStore = defineStore('tango', () => {
 
     const cell = grid.value[row]![col]!
 
-    // Toggle cyclique : vide → lune → soleil → vide
+    // Toggle cyclique : vide → soleil → lune → vide
     if (cell.value === TangoSymbol.EMPTY) {
-      cell.value = TangoSymbol.MOON
-    } else if (cell.value === TangoSymbol.MOON) {
       cell.value = TangoSymbol.SUN
+    } else if (cell.value === TangoSymbol.SUN) {
+      cell.value = TangoSymbol.MOON
     } else {
       cell.value = TangoSymbol.EMPTY
     }

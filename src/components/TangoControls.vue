@@ -23,8 +23,8 @@ if (typeof window !== 'undefined') {
   <div class="tango-controls">
     <div class="instructions">
       <p class="instruction-text">
-        <span class="symbol-demo">🌑</span> →
         <span class="symbol-demo sun">☀️</span> →
+        <span class="symbol-demo moon">🌑</span> →
         <span class="symbol-demo empty">vide</span>
       </p>
       <p class="instruction-subtitle">Cliquez sur une case pour alterner entre les symboles</p>
@@ -84,13 +84,12 @@ if (typeof window !== 'undefined') {
   justify-content: center;
 }
 
-.symbol-demo:first-child {
-  color: #1e3a8a;
+.symbol-demo.sun {
   font-size: 1.8em;
 }
 
-.symbol-demo.sun {
-  font-size: 1.8em;
+.symbol-demo.moon {
+  font-size: calc(1.8em * 0.85); /* 15% plus petit que le soleil */
 }
 
 .symbol-demo.empty {

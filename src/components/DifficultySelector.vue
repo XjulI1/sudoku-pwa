@@ -22,7 +22,7 @@ const emit = defineEmits<{
 
 const gameTypes = [
   { value: 'sudoku' as GameType, label: 'Sudoku', icon: '🔢', description: 'Jeu de logique classique' },
-  { value: 'tango' as GameType, label: 'Tango', icon: '☀️🌙', description: 'Puzzle de symboles' },
+  { value: 'tango' as GameType, label: 'Tango', icon: '☀️🌑', description: 'Puzzle de symboles' },
 ]
 
 const sudokuDifficulties = [

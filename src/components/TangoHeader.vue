@@ -28,7 +28,7 @@ const progressPercent = computed(() => Math.round(store.progress))
 <template>
   <div class="tango-header">
     <div class="header-top">
-      <h1 class="title">Tango ☀️🌙</h1>
+      <h1 class="title">Tango ☀️🌑</h1>
       <div class="timer">⏱️ {{ store.formattedTime }}</div>
     </div>
 
