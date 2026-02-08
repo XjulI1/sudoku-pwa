@@ -386,20 +386,21 @@ function getScoreClass(score: number): string {
 
 .game-type-tabs button {
   flex: 1;
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 0.75rem;
   background: var(--cell-bg);
   border: 2px solid transparent;
   border-radius: 6px;
   cursor: pointer;
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .game-type-tabs button:hover {

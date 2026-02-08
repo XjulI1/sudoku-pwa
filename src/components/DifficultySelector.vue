@@ -251,6 +251,7 @@ h2 {
   cursor: pointer;
   transition: all 0.2s ease;
   background-color: var(--card-bg);
+  min-width: 0;
 }
 
 .game-type-option:hover {
@@ -415,6 +416,40 @@ h2 {
 
   h2 {
     font-size: 1.5rem;
+  }
+
+  .game-type-options {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .game-type-option {
+    flex-direction: column;
+    text-align: center;
+    padding: 0.75rem 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .game-radio {
+    display: none;
+  }
+
+  .game-header {
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0;
+  }
+
+  .game-icon {
+    font-size: 1.75rem;
+  }
+
+  .game-type-option .option-title {
+    font-size: 0.85rem;
+  }
+
+  .game-type-option .option-description {
+    display: none;
   }
 
   .grid-size-options {
