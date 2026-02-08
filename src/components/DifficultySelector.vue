@@ -133,6 +133,7 @@ const openStats = () => {
           :key="game.value"
           class="game-type-option"
           :class="{ selected: selectedGameType === game.value }"
+          @click="selectedGameType = game.value"
         >
           <div class="option-content">
             <div class="game-header">
@@ -154,6 +155,7 @@ const openStats = () => {
           :key="size.value"
           class="grid-size-option"
           :class="{ selected: selectedGridSize === size.value }"
+          @click="selectedGridSize = size.value"
         >
           <div class="option-content">
             <h4 class="option-title">{{ size.label }}</h4>
@@ -172,6 +174,7 @@ const openStats = () => {
           :key="diff.value"
           class="difficulty-option"
           :class="{ selected: isDifficultySelected(diff.value) }"
+          @click="selectedDifficulty = diff.value"
         >
           <div class="option-content">
             <h4 class="option-title">{{ diff.label }}</h4>
