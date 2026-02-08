@@ -2,6 +2,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useSudokuStore } from '@/stores/sudoku'
 import { useTangoStore } from '@/stores/tango'
+import { useMinesweeperStore } from '@/stores/minesweeper'
 import DifficultySelector from '@/components/DifficultySelector.vue'
 import GameHeader from '@/components/GameHeader.vue'
 import SudokuGrid from '@/components/SudokuGrid.vue'
@@ -9,13 +10,17 @@ import GameControls from '@/components/GameControls.vue'
 import TangoHeader from '@/components/TangoHeader.vue'
 import TangoGrid from '@/components/TangoGrid.vue'
 import TangoControls from '@/components/TangoControls.vue'
+import MinesweeperHeader from '@/components/MinesweeperHeader.vue'
+import MinesweeperGrid from '@/components/MinesweeperGrid.vue'
+import MinesweeperControls from '@/components/MinesweeperControls.vue'
 import Statistics from '@/components/Statistics.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 
-type GameType = 'sudoku' | 'tango'
+type GameType = 'sudoku' | 'tango' | 'minesweeper'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
+const minesweeperStore = useMinesweeperStore()
 const currentGameType = ref<GameType>('sudoku')
 const showMenu = ref(false)
 const showStats = ref(false)
@@ -24,21 +29,27 @@ const showConfirmNewGame = ref(false)
 const hasActiveGame = computed(() => {
   if (currentGameType.value === 'sudoku') {
     return sudokuStore.grid.length > 0
-  } else {
+  } else if (currentGameType.value === 'tango') {
     return tangoStore.grid.length > 0
+  } else {
+    return minesweeperStore.grid.length > 0
   }
 })
 
 onMounted(() => {
-  // Essayer de charger une partie sauvegardée Sudoku
+  // Essayer de charger une partie sauvegardée
   const sudokuLoaded = sudokuStore.loadGame()
   const tangoLoaded = tangoStore.loadGame()
+  const minesweeperLoaded = minesweeperStore.loadGame()
 
   if (sudokuLoaded) {
     currentGameType.value = 'sudoku'
     showMenu.value = false
   } else if (tangoLoaded) {
     currentGameType.value = 'tango'
+    showMenu.value = false
+  } else if (minesweeperLoaded) {
+    currentGameType.value = 'minesweeper'
     showMenu.value = false
   } else {
     showMenu.value = true
@@ -61,8 +72,10 @@ const startNewGameFromMenu = () => {
 const confirmNewGame = () => {
   if (currentGameType.value === 'sudoku') {
     sudokuStore.resetGame()
-  } else {
+  } else if (currentGameType.value === 'tango') {
     tangoStore.resetGame()
+  } else {
+    minesweeperStore.resetGame()
   }
   showMenu.value = true
 }
@@ -91,10 +104,17 @@ const closeStats = () => {
       </template>
 
       <!-- Tango Game -->
-      <template v-else>
+      <template v-else-if="currentGameType === 'tango'">
         <TangoHeader @new-game="startNewGameFromMenu" />
         <TangoGrid />
         <TangoControls />
+      </template>
+
+      <!-- Minesweeper Game -->
+      <template v-else>
+        <MinesweeperHeader @new-game="startNewGameFromMenu" />
+        <MinesweeperGrid />
+        <MinesweeperControls />
       </template>
     </div>
 

@@ -2,8 +2,10 @@
 import { ref, computed } from 'vue'
 import { Difficulty, GridSize } from '@/types/sudoku'
 import { TangoDifficulty } from '@/types/tango'
+import { MinesweeperDifficulty } from '@/types/minesweeper'
 import { StatsManager } from '@/utils/statsManager'
 import { TangoStatsManager } from '@/utils/tangoStatsManager'
+import { MinesweeperStatsManager } from '@/utils/minesweeperStatsManager'
 
 defineOptions({
   name: 'GameStatistics'
@@ -13,7 +15,7 @@ defineEmits<{
   close: []
 }>()
 
-type GameType = 'sudoku' | 'tango'
+type GameType = 'sudoku' | 'tango' | 'minesweeper'
 
 const selectedGameType = ref<GameType>('sudoku')
 
@@ -31,6 +33,12 @@ const tangoDifficulties = [
   { value: TangoDifficulty.HARD, label: 'Difficile' },
 ]
 
+const minesweeperDifficulties = [
+  { value: MinesweeperDifficulty.BEGINNER, label: 'Débutant' },
+  { value: MinesweeperDifficulty.INTERMEDIATE, label: 'Intermédiaire' },
+  { value: MinesweeperDifficulty.EXPERT, label: 'Expert' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6' },
   { value: GridSize.NINE, label: '9x9' },
@@ -38,29 +46,36 @@ const gridSizes = [
 
 const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
 const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
+const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDifficulty.BEGINNER)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const totalGamesPlayed = computed(() => {
   if (selectedGameType.value === 'sudoku') {
     return StatsManager.getTotalGamesPlayed()
-  } else {
+  } else if (selectedGameType.value === 'tango') {
     return TangoStatsManager.getTotalGamesPlayed()
+  } else {
+    return MinesweeperStatsManager.getTotalGamesPlayed()
   }
 })
 
 const bestScore = computed(() => {
   if (selectedGameType.value === 'sudoku') {
     return StatsManager.getBestScore()
-  } else {
+  } else if (selectedGameType.value === 'tango') {
     return TangoStatsManager.getBestScore()
+  } else {
+    return MinesweeperStatsManager.getBestScore()
   }
 })
 
 const currentStats = computed(() => {
   if (selectedGameType.value === 'sudoku') {
     return StatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
-  } else {
+  } else if (selectedGameType.value === 'tango') {
     return TangoStatsManager.loadDifficultyStats(selectedTangoDifficulty.value)
+  } else {
+    return MinesweeperStatsManager.loadDifficultyStats(selectedMinesweeperDifficulty.value)
   }
 })
 
@@ -72,8 +87,10 @@ const sortedHistory = computed(() => {
 const difficulties = computed(() => {
   if (selectedGameType.value === 'sudoku') {
     return sudokuDifficulties
-  } else {
+  } else if (selectedGameType.value === 'tango') {
     return tangoDifficulties
+  } else {
+    return minesweeperDifficulties
   }
 })
 
@@ -81,15 +98,19 @@ const currentDifficulty = computed({
   get: () => {
     if (selectedGameType.value === 'sudoku') {
       return selectedDifficulty.value
-    } else {
+    } else if (selectedGameType.value === 'tango') {
       return selectedTangoDifficulty.value
+    } else {
+      return selectedMinesweeperDifficulty.value
     }
   },
-  set: (value: Difficulty | TangoDifficulty) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty) => {
     if (selectedGameType.value === 'sudoku') {
       selectedDifficulty.value = value as Difficulty
-    } else {
+    } else if (selectedGameType.value === 'tango') {
       selectedTangoDifficulty.value = value as TangoDifficulty
+    } else {
+      selectedMinesweeperDifficulty.value = value as MinesweeperDifficulty
     }
   }
 })
@@ -107,12 +128,15 @@ const getGridSizeCount = (gridSize: GridSize): number => {
 }
 
 // Compte le nombre de parties pour une difficulté et taille données
-const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty): number => {
+const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty): number => {
   if (selectedGameType.value === 'sudoku') {
     const stats = StatsManager.loadDifficultyStats(difficulty as Difficulty, selectedGridSize.value)
     return stats?.gamesPlayed || 0
-  } else {
+  } else if (selectedGameType.value === 'tango') {
     const stats = TangoStatsManager.loadDifficultyStats(difficulty as TangoDifficulty)
+    return stats?.gamesPlayed || 0
+  } else {
+    const stats = MinesweeperStatsManager.loadDifficultyStats(difficulty as MinesweeperDifficulty)
     return stats?.gamesPlayed || 0
   }
 }
@@ -175,6 +199,13 @@ function getScoreClass(score: number): string {
           ☀️🌑 Tango
           <span class="count">({{ selectedGameType === 'tango' ? totalGamesPlayed : TangoStatsManager.getTotalGamesPlayed() }})</span>
         </button>
+        <button
+          :class="{ active: selectedGameType === 'minesweeper' }"
+          @click="selectedGameType = 'minesweeper'"
+        >
+          💣 Démineur
+          <span class="count">({{ selectedGameType === 'minesweeper' ? totalGamesPlayed : MinesweeperStatsManager.getTotalGamesPlayed() }})</span>
+        </button>
       </div>
 
       <div v-if="selectedGameType === 'sudoku'" class="grid-size-tabs">
@@ -208,6 +239,14 @@ function getScoreClass(score: number): string {
           <div class="stat-label">Parties jouées</div>
           <div class="stat-value">{{ currentStats.gamesPlayed }}</div>
         </div>
+        <div v-if="'gamesWon' in currentStats" class="stat-card">
+          <div class="stat-label">Parties gagnées</div>
+          <div class="stat-value">{{ currentStats.gamesWon }}</div>
+        </div>
+        <div v-if="'winRate' in currentStats" class="stat-card">
+          <div class="stat-label">Taux de victoire</div>
+          <div class="stat-value">{{ (currentStats.winRate * 100).toFixed(0) }}%</div>
+        </div>
         <div class="stat-card">
           <div class="stat-label">Note moyenne</div>
           <div class="stat-value">{{ currentStats.averageScore.toFixed(1) }}/10</div>
@@ -224,15 +263,15 @@ function getScoreClass(score: number): string {
           <div class="stat-label">Temps moyen</div>
           <div class="stat-value">{{ formatTime(currentStats.averageTime) }}</div>
         </div>
-        <div class="stat-card">
+        <div v-if="'totalErrors' in currentStats" class="stat-card">
           <div class="stat-label">Total erreurs</div>
           <div class="stat-value">{{ currentStats.totalErrors }}</div>
         </div>
-        <div class="stat-card">
+        <div v-if="'totalHints' in currentStats" class="stat-card">
           <div class="stat-label">Total indices</div>
           <div class="stat-value">{{ currentStats.totalHints }}</div>
         </div>
-        <div class="stat-card">
+        <div v-if="'totalErrors' in currentStats" class="stat-card">
           <div class="stat-label">Moyenne erreurs</div>
           <div class="stat-value">
             {{ (currentStats.totalErrors / currentStats.gamesPlayed).toFixed(1) }}
@@ -250,8 +289,9 @@ function getScoreClass(score: number): string {
             <div class="history-details">
               <div class="history-time">{{ formatTime(game.completionTime) }}</div>
               <div class="history-meta">
-                <span>{{ game.errorsCount }} erreurs</span>
-                <span>{{ game.hintsUsed }} indices</span>
+                <span v-if="'won' in game">{{ game.won ? 'Gagné' : 'Perdu' }}</span>
+                <span v-if="'errorsCount' in game">{{ game.errorsCount }} erreurs</span>
+                <span v-if="'hintsUsed' in game">{{ game.hintsUsed }} indices</span>
                 <span>{{ formatTime(game.pauseTime) }} pause</span>
               </div>
             </div>

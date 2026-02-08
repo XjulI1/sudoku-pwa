@@ -2,17 +2,21 @@
 import { ref, computed } from 'vue'
 import { Difficulty, GridSize } from '@/types/sudoku'
 import { TangoDifficulty } from '@/types/tango'
+import { MinesweeperDifficulty } from '@/types/minesweeper'
 import { useSudokuStore } from '@/stores/sudoku'
 import { useTangoStore } from '@/stores/tango'
+import { useMinesweeperStore } from '@/stores/minesweeper'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
+const minesweeperStore = useMinesweeperStore()
 
-type GameType = 'sudoku' | 'tango'
+type GameType = 'sudoku' | 'tango' | 'minesweeper'
 
 const selectedGameType = ref<GameType>('sudoku')
 const selectedSudokuDifficulty = ref<Difficulty>(Difficulty.NORMAL)
 const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
+const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDifficulty.BEGINNER)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const emit = defineEmits<{
@@ -23,6 +27,7 @@ const emit = defineEmits<{
 const gameTypes = [
   { value: 'sudoku' as GameType, label: 'Sudoku', icon: '🔢', description: 'Jeu de logique classique' },
   { value: 'tango' as GameType, label: 'Tango', icon: '☀️🌑', description: 'Puzzle de symboles' },
+  { value: 'minesweeper' as GameType, label: 'Démineur', icon: '💣', description: 'Trouvez les mines cachées' },
 ]
 
 const sudokuDifficulties = [
@@ -43,43 +48,57 @@ const tangoDifficulties = [
   { value: TangoDifficulty.HARD, label: 'Difficile', description: 'Pour les experts' },
 ]
 
+const minesweeperDifficulties = [
+  { value: MinesweeperDifficulty.BEGINNER, label: 'Débutant', description: 'Grille 9x9, 10 mines' },
+  { value: MinesweeperDifficulty.INTERMEDIATE, label: 'Intermédiaire', description: 'Grille 16x16, 40 mines' },
+  { value: MinesweeperDifficulty.EXPERT, label: 'Expert', description: 'Grille 16x30, 99 mines' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6', description: 'Grille 6x6 (2x3 régions)' },
   { value: GridSize.NINE, label: '9x9', description: 'Grille classique 9x9 (3x3 régions)' },
 ]
 
 const currentDifficulties = computed(() => {
-  return selectedGameType.value === 'sudoku' ? sudokuDifficulties : tangoDifficulties
+  if (selectedGameType.value === 'sudoku') return sudokuDifficulties
+  if (selectedGameType.value === 'tango') return tangoDifficulties
+  return minesweeperDifficulties
 })
 
 const selectedDifficulty = computed({
   get: () => {
-    return selectedGameType.value === 'sudoku'
-      ? selectedSudokuDifficulty.value
-      : selectedTangoDifficulty.value
+    if (selectedGameType.value === 'sudoku') return selectedSudokuDifficulty.value
+    if (selectedGameType.value === 'tango') return selectedTangoDifficulty.value
+    return selectedMinesweeperDifficulty.value
   },
-  set: (value: Difficulty | TangoDifficulty) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty) => {
     if (selectedGameType.value === 'sudoku') {
       selectedSudokuDifficulty.value = value as Difficulty
-    } else {
+    } else if (selectedGameType.value === 'tango') {
       selectedTangoDifficulty.value = value as TangoDifficulty
+    } else {
+      selectedMinesweeperDifficulty.value = value as MinesweeperDifficulty
     }
   }
 })
 
-const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty) => {
+const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | MinesweeperDifficulty) => {
   if (selectedGameType.value === 'sudoku') {
     return selectedSudokuDifficulty.value === diffValue
-  } else {
+  } else if (selectedGameType.value === 'tango') {
     return selectedTangoDifficulty.value === diffValue
+  } else {
+    return selectedMinesweeperDifficulty.value === diffValue
   }
 }
 
 const startNewGame = () => {
   if (selectedGameType.value === 'sudoku') {
     sudokuStore.newGame(selectedSudokuDifficulty.value, selectedGridSize.value)
-  } else {
+  } else if (selectedGameType.value === 'tango') {
     tangoStore.newGame(selectedTangoDifficulty.value)
+  } else {
+    minesweeperStore.newGame(selectedMinesweeperDifficulty.value)
   }
   emit('start', selectedGameType.value)
 }
@@ -217,7 +236,7 @@ h2 {
 
 .game-type-options {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-bottom: 1rem;
 }
