@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Difficulty, GridSize } from '@/types/sudoku'
 import { TangoDifficulty } from '@/types/tango'
 import { MinesweeperDifficulty } from '@/types/minesweeper'
@@ -13,7 +13,17 @@ const minesweeperStore = useMinesweeperStore()
 
 type GameType = 'sudoku' | 'tango' | 'minesweeper'
 
-const selectedGameType = ref<GameType>('sudoku')
+const props = withDefaults(defineProps<{
+  initialGameType?: GameType
+}>(), {
+  initialGameType: 'sudoku'
+})
+
+const selectedGameType = ref<GameType>(props.initialGameType)
+
+watch(() => props.initialGameType, (val) => {
+  selectedGameType.value = val
+})
 const selectedSudokuDifficulty = ref<Difficulty>(Difficulty.NORMAL)
 const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
 const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDifficulty.BEGINNER)

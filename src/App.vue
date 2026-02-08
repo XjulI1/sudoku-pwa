@@ -92,7 +92,7 @@ const closeStats = () => {
 <template>
   <div class="app">
     <div v-if="showMenu || !hasActiveGame" class="menu-view">
-      <DifficultySelector @start="handleStart" @show-stats="openStats" />
+      <DifficultySelector :initial-game-type="currentGameType" @start="handleStart" @show-stats="openStats" />
     </div>
 
     <div v-else class="game-view">
