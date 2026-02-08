@@ -14,10 +14,17 @@ const DIFFICULTY_CONFIGS: Record<MinesweeperDifficulty, MinesweeperConfig> = {
 
 export class MinesweeperGenerator {
   /**
-   * Retourne la configuration pour une difficulté donnée
+   * Retourne la configuration pour une difficulté donnée.
+   * En mode portrait, la grille Expert est inversée (16 colonnes x 30 lignes)
+   * pour mieux s'adapter aux écrans verticaux.
    */
-  static getConfig(difficulty: MinesweeperDifficulty): MinesweeperConfig {
-    return { ...DIFFICULTY_CONFIGS[difficulty] }
+  static getConfig(difficulty: MinesweeperDifficulty, isPortrait = false): MinesweeperConfig {
+    const config = { ...DIFFICULTY_CONFIGS[difficulty] }
+    if (difficulty === MinesweeperDifficulty.EXPERT && isPortrait) {
+      config.rows = 30
+      config.cols = 16
+    }
+    return config
   }
 
   /**

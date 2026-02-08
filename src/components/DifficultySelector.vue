@@ -51,7 +51,7 @@ const tangoDifficulties = [
 const minesweeperDifficulties = [
   { value: MinesweeperDifficulty.BEGINNER, label: 'Débutant', description: 'Grille 9x9, 10 mines' },
   { value: MinesweeperDifficulty.INTERMEDIATE, label: 'Intermédiaire', description: 'Grille 16x16, 40 mines' },
-  { value: MinesweeperDifficulty.EXPERT, label: 'Expert', description: 'Grille 16x30, 99 mines' },
+  { value: MinesweeperDifficulty.EXPERT, label: 'Expert', description: '99 mines, grille adaptative' },
 ]
 
 const gridSizes = [

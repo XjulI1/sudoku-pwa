@@ -87,7 +87,8 @@ export const useMinesweeperStore = defineStore('minesweeper', () => {
   // Nouveau jeu
   function newGame(newDifficulty: MinesweeperDifficulty) {
     difficulty.value = newDifficulty
-    config.value = MinesweeperGenerator.getConfig(newDifficulty)
+    const isPortrait = typeof window !== 'undefined' && window.innerHeight > window.innerWidth
+    config.value = MinesweeperGenerator.getConfig(newDifficulty, isPortrait)
     grid.value = MinesweeperGenerator.createEmptyGrid(config.value)
     gameStatus.value = MinesweeperGameStatus.PLAYING
     startTime.value = Date.now()
