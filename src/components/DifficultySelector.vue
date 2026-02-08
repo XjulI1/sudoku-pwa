@@ -134,12 +134,6 @@ const openStats = () => {
           class="game-type-option"
           :class="{ selected: selectedGameType === game.value }"
         >
-          <input
-            type="radio"
-            :value="game.value"
-            v-model="selectedGameType"
-            class="game-radio"
-          />
           <div class="option-content">
             <div class="game-header">
               <span class="game-icon">{{ game.icon }}</span>
@@ -161,12 +155,6 @@ const openStats = () => {
           class="grid-size-option"
           :class="{ selected: selectedGridSize === size.value }"
         >
-          <input
-            type="radio"
-            :value="size.value"
-            v-model="selectedGridSize"
-            class="size-radio"
-          />
           <div class="option-content">
             <h4 class="option-title">{{ size.label }}</h4>
             <p class="option-description">{{ size.description }}</p>
@@ -185,12 +173,6 @@ const openStats = () => {
           class="difficulty-option"
           :class="{ selected: isDifficultySelected(diff.value) }"
         >
-          <input
-            type="radio"
-            :value="diff.value"
-            v-model="selectedDifficulty"
-            class="difficulty-radio"
-          />
           <div class="option-content">
             <h4 class="option-title">{{ diff.label }}</h4>
             <p class="option-description">{{ diff.description }}</p>
@@ -276,13 +258,6 @@ h2 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.game-radio {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--primary);
-}
-
 .game-header {
   display: flex;
   align-items: center;
@@ -349,14 +324,6 @@ h2 {
 .difficulty-option.selected {
   border-color: var(--primary);
   background-color: var(--primary-light);
-}
-
-.difficulty-radio,
-.size-radio {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--primary);
 }
 
 .option-content {
@@ -438,10 +405,6 @@ h2 {
     text-align: center;
     padding: 0.75rem 0.5rem;
     gap: 0.25rem;
-  }
-
-  .game-radio {
-    display: none;
   }
 
   .game-header {
