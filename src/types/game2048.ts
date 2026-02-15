@@ -50,12 +50,12 @@ export interface Game2048State {
 // Statistiques d'une partie
 export interface Game2048GameStats {
   gridSize: Game2048GridSize
-  score: number
+  gameScore: number
   highestTile: number
   completionTime: number
   won: boolean
   pauseTime: number
-  noteScore: number
+  score: number
   completedAt: number
 }
 

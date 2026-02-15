@@ -414,7 +414,8 @@ function getScoreClass(score: number): string {
 }
 
 .game-type-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   margin-bottom: 1rem;
 }

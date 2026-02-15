@@ -10,15 +10,15 @@ const STATS_STORAGE_KEY = 'game2048-statistics'
 export class Game2048StatsManager {
   static saveGameStats(
     gridSize: Game2048GridSize,
-    score: number,
+    gameScore: number,
     highestTile: number,
     completionTime: number,
     won: boolean,
     pauseTime: number,
   ): void {
-    const noteScore = Game2048ScoreCalculator.calculateScore(
+    const score = Game2048ScoreCalculator.calculateScore(
       gridSize,
-      score,
+      gameScore,
       highestTile,
       completionTime,
       pauseTime,
@@ -26,12 +26,12 @@ export class Game2048StatsManager {
 
     const gameStat: Game2048GameStats = {
       gridSize,
-      score,
+      gameScore,
       highestTile,
       completionTime,
       won,
       pauseTime,
-      noteScore,
+      score,
       completedAt: Date.now(),
     }
 
@@ -49,10 +49,10 @@ export class Game2048StatsManager {
       sizeStats.averageTime =
         sizeStats.history.reduce((sum, s) => sum + s.completionTime, 0) / sizeStats.history.length
       sizeStats.averageScore =
-        sizeStats.history.reduce((sum, s) => sum + s.noteScore, 0) / sizeStats.history.length
+        sizeStats.history.reduce((sum, s) => sum + s.score, 0) / sizeStats.history.length
 
-      if (noteScore > sizeStats.bestScore) {
-        sizeStats.bestScore = noteScore
+      if (score > sizeStats.bestScore) {
+        sizeStats.bestScore = score
       }
       if (completionTime < sizeStats.bestTime || sizeStats.bestTime === 0) {
         sizeStats.bestTime = completionTime
@@ -66,8 +66,8 @@ export class Game2048StatsManager {
         gamesPlayed: 1,
         gamesWon: won ? 1 : 0,
         averageTime: completionTime,
-        averageScore: noteScore,
-        bestScore: noteScore,
+        averageScore: score,
+        bestScore: score,
         bestTime: completionTime,
         winRate: won ? 1 : 0,
         highestTile: highestTile,
