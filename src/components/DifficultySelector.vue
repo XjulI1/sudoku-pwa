@@ -3,15 +3,18 @@ import { ref, computed, watch } from 'vue'
 import { Difficulty, GridSize } from '@/types/sudoku'
 import { TangoDifficulty } from '@/types/tango'
 import { MinesweeperDifficulty } from '@/types/minesweeper'
+import { Game2048GridSize } from '@/types/game2048'
 import { useSudokuStore } from '@/stores/sudoku'
 import { useTangoStore } from '@/stores/tango'
 import { useMinesweeperStore } from '@/stores/minesweeper'
+import { useGame2048Store } from '@/stores/game2048'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
 const minesweeperStore = useMinesweeperStore()
+const game2048Store = useGame2048Store()
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048'
 
 const props = withDefaults(defineProps<{
   initialGameType?: GameType
@@ -27,6 +30,7 @@ watch(() => props.initialGameType, (val) => {
 const selectedSudokuDifficulty = ref<Difficulty>(Difficulty.NORMAL)
 const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
 const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDifficulty.BEGINNER)
+const selected2048GridSize = ref<Game2048GridSize>(Game2048GridSize.FOUR)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const emit = defineEmits<{
@@ -38,6 +42,7 @@ const gameTypes = [
   { value: 'sudoku' as GameType, label: 'Sudoku', icon: '🔢', description: 'Jeu de logique classique' },
   { value: 'tango' as GameType, label: 'Tango', icon: '☀️🌑', description: 'Puzzle de symboles' },
   { value: 'minesweeper' as GameType, label: 'Démineur', icon: '💣', description: 'Trouvez les mines cachées' },
+  { value: 'game2048' as GameType, label: '2048', icon: '🎯', description: 'Fusionnez les tuiles' },
 ]
 
 const sudokuDifficulties = [
@@ -64,6 +69,12 @@ const minesweeperDifficulties = [
   { value: MinesweeperDifficulty.EXPERT, label: 'Expert', description: '99 mines, grille adaptative' },
 ]
 
+const game2048GridSizes = [
+  { value: Game2048GridSize.THREE, label: '3×3', description: 'Mini - Objectif 512' },
+  { value: Game2048GridSize.FOUR, label: '4×4', description: 'Classique - Objectif 2048' },
+  { value: Game2048GridSize.FIVE, label: '5×5', description: 'Grand - Objectif 4096' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6', description: 'Grille 6x6 (2x3 régions)' },
   { value: GridSize.NINE, label: '9x9', description: 'Grille classique 9x9 (3x3 régions)' },
@@ -72,33 +83,39 @@ const gridSizes = [
 const currentDifficulties = computed(() => {
   if (selectedGameType.value === 'sudoku') return sudokuDifficulties
   if (selectedGameType.value === 'tango') return tangoDifficulties
-  return minesweeperDifficulties
+  if (selectedGameType.value === 'minesweeper') return minesweeperDifficulties
+  return game2048GridSizes
 })
 
 const selectedDifficulty = computed({
   get: () => {
     if (selectedGameType.value === 'sudoku') return selectedSudokuDifficulty.value
     if (selectedGameType.value === 'tango') return selectedTangoDifficulty.value
-    return selectedMinesweeperDifficulty.value
+    if (selectedGameType.value === 'minesweeper') return selectedMinesweeperDifficulty.value
+    return selected2048GridSize.value
   },
-  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize) => {
     if (selectedGameType.value === 'sudoku') {
       selectedSudokuDifficulty.value = value as Difficulty
     } else if (selectedGameType.value === 'tango') {
       selectedTangoDifficulty.value = value as TangoDifficulty
-    } else {
+    } else if (selectedGameType.value === 'minesweeper') {
       selectedMinesweeperDifficulty.value = value as MinesweeperDifficulty
+    } else {
+      selected2048GridSize.value = value as Game2048GridSize
     }
   }
 })
 
-const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | MinesweeperDifficulty) => {
+const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize) => {
   if (selectedGameType.value === 'sudoku') {
     return selectedSudokuDifficulty.value === diffValue
   } else if (selectedGameType.value === 'tango') {
     return selectedTangoDifficulty.value === diffValue
-  } else {
+  } else if (selectedGameType.value === 'minesweeper') {
     return selectedMinesweeperDifficulty.value === diffValue
+  } else {
+    return selected2048GridSize.value === diffValue
   }
 }
 
@@ -107,8 +124,10 @@ const startNewGame = () => {
     sudokuStore.newGame(selectedSudokuDifficulty.value, selectedGridSize.value)
   } else if (selectedGameType.value === 'tango') {
     tangoStore.newGame(selectedTangoDifficulty.value)
-  } else {
+  } else if (selectedGameType.value === 'minesweeper') {
     minesweeperStore.newGame(selectedMinesweeperDifficulty.value)
+  } else {
+    game2048Store.newGame(selected2048GridSize.value)
   }
   emit('start', selectedGameType.value)
 }
@@ -165,9 +184,9 @@ const openStats = () => {
       </div>
     </div>
 
-    <!-- Difficulté -->
+    <!-- Difficulté / Taille de grille pour 2048 -->
     <div class="section">
-      <h3 class="section-title">Difficulté</h3>
+      <h3 class="section-title">{{ selectedGameType === 'game2048' ? 'Taille de la grille' : 'Difficulté' }}</h3>
       <div class="difficulty-options">
         <label
           v-for="diff in currentDifficulties"
@@ -231,7 +250,7 @@ h2 {
 
 .game-type-options {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-bottom: 1rem;
 }
@@ -399,7 +418,7 @@ h2 {
   }
 
   .game-type-options {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
 
