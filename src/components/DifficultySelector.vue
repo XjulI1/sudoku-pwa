@@ -4,17 +4,20 @@ import { Difficulty, GridSize } from '@/types/sudoku'
 import { TangoDifficulty } from '@/types/tango'
 import { MinesweeperDifficulty } from '@/types/minesweeper'
 import { Game2048GridSize } from '@/types/game2048'
+import { PicrossDifficulty } from '@/types/picross'
 import { useSudokuStore } from '@/stores/sudoku'
 import { useTangoStore } from '@/stores/tango'
 import { useMinesweeperStore } from '@/stores/minesweeper'
 import { useGame2048Store } from '@/stores/game2048'
+import { usePicrossStore } from '@/stores/picross'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
 const minesweeperStore = useMinesweeperStore()
 const game2048Store = useGame2048Store()
+const picrossStore = usePicrossStore()
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross'
 
 const props = withDefaults(defineProps<{
   initialGameType?: GameType
@@ -31,6 +34,7 @@ const selectedSudokuDifficulty = ref<Difficulty>(Difficulty.NORMAL)
 const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
 const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDifficulty.BEGINNER)
 const selected2048GridSize = ref<Game2048GridSize>(Game2048GridSize.FOUR)
+const selectedPicrossDifficulty = ref<PicrossDifficulty>(PicrossDifficulty.EASY)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const emit = defineEmits<{
@@ -43,6 +47,7 @@ const gameTypes = [
   { value: 'tango' as GameType, label: 'Tango', icon: '☀️🌑', description: 'Puzzle de symboles' },
   { value: 'minesweeper' as GameType, label: 'Démineur', icon: '💣', description: 'Trouvez les mines cachées' },
   { value: 'game2048' as GameType, label: '2048', icon: '🎯', description: 'Fusionnez les tuiles' },
+  { value: 'picross' as GameType, label: 'Picross', icon: '🧩', description: 'Puzzle de logique visuel' },
 ]
 
 const sudokuDifficulties = [
@@ -75,6 +80,12 @@ const game2048GridSizes = [
   { value: Game2048GridSize.FIVE, label: '5×5', description: 'Grand - Objectif 4096' },
 ]
 
+const picrossDifficulties = [
+  { value: PicrossDifficulty.EASY, label: 'Facile', description: 'Grille 5x5' },
+  { value: PicrossDifficulty.MEDIUM, label: 'Moyen', description: 'Grille 10x10' },
+  { value: PicrossDifficulty.HARD, label: 'Difficile', description: 'Grille 15x15' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6', description: 'Grille 6x6 (2x3 régions)' },
   { value: GridSize.NINE, label: '9x9', description: 'Grille classique 9x9 (3x3 régions)' },
@@ -84,6 +95,7 @@ const currentDifficulties = computed(() => {
   if (selectedGameType.value === 'sudoku') return sudokuDifficulties
   if (selectedGameType.value === 'tango') return tangoDifficulties
   if (selectedGameType.value === 'minesweeper') return minesweeperDifficulties
+  if (selectedGameType.value === 'picross') return picrossDifficulties
   return game2048GridSizes
 })
 
@@ -92,28 +104,33 @@ const selectedDifficulty = computed({
     if (selectedGameType.value === 'sudoku') return selectedSudokuDifficulty.value
     if (selectedGameType.value === 'tango') return selectedTangoDifficulty.value
     if (selectedGameType.value === 'minesweeper') return selectedMinesweeperDifficulty.value
+    if (selectedGameType.value === 'picross') return selectedPicrossDifficulty.value
     return selected2048GridSize.value
   },
-  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty) => {
     if (selectedGameType.value === 'sudoku') {
       selectedSudokuDifficulty.value = value as Difficulty
     } else if (selectedGameType.value === 'tango') {
       selectedTangoDifficulty.value = value as TangoDifficulty
     } else if (selectedGameType.value === 'minesweeper') {
       selectedMinesweeperDifficulty.value = value as MinesweeperDifficulty
+    } else if (selectedGameType.value === 'picross') {
+      selectedPicrossDifficulty.value = value as PicrossDifficulty
     } else {
       selected2048GridSize.value = value as Game2048GridSize
     }
   }
 })
 
-const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize) => {
+const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty) => {
   if (selectedGameType.value === 'sudoku') {
     return selectedSudokuDifficulty.value === diffValue
   } else if (selectedGameType.value === 'tango') {
     return selectedTangoDifficulty.value === diffValue
   } else if (selectedGameType.value === 'minesweeper') {
     return selectedMinesweeperDifficulty.value === diffValue
+  } else if (selectedGameType.value === 'picross') {
+    return selectedPicrossDifficulty.value === diffValue
   } else {
     return selected2048GridSize.value === diffValue
   }
@@ -126,6 +143,8 @@ const startNewGame = () => {
     tangoStore.newGame(selectedTangoDifficulty.value)
   } else if (selectedGameType.value === 'minesweeper') {
     minesweeperStore.newGame(selectedMinesweeperDifficulty.value)
+  } else if (selectedGameType.value === 'picross') {
+    picrossStore.newGame(selectedPicrossDifficulty.value)
   } else {
     game2048Store.newGame(selected2048GridSize.value)
   }

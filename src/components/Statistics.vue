@@ -4,10 +4,12 @@ import { Difficulty, GridSize } from '@/types/sudoku'
 import { TangoDifficulty } from '@/types/tango'
 import { MinesweeperDifficulty } from '@/types/minesweeper'
 import { Game2048GridSize } from '@/types/game2048'
+import { PicrossDifficulty } from '@/types/picross'
 import { StatsManager } from '@/utils/statsManager'
 import { TangoStatsManager } from '@/utils/tangoStatsManager'
 import { MinesweeperStatsManager } from '@/utils/minesweeperStatsManager'
 import { Game2048StatsManager } from '@/utils/game2048StatsManager'
+import { PicrossStatsManager } from '@/utils/picrossStatsManager'
 
 defineOptions({
   name: 'GameStatistics'
@@ -17,7 +19,7 @@ defineEmits<{
   close: []
 }>()
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross'
 
 const selectedGameType = ref<GameType>('sudoku')
 
@@ -47,6 +49,12 @@ const game2048GridSizes = [
   { value: Game2048GridSize.FIVE, label: '5×5' },
 ]
 
+const picrossDifficulties = [
+  { value: PicrossDifficulty.EASY, label: 'Facile' },
+  { value: PicrossDifficulty.MEDIUM, label: 'Moyen' },
+  { value: PicrossDifficulty.HARD, label: 'Difficile' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6' },
   { value: GridSize.NINE, label: '9x9' },
@@ -56,6 +64,7 @@ const selectedDifficulty = ref<Difficulty>(Difficulty.NORMAL)
 const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
 const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDifficulty.BEGINNER)
 const selected2048GridSize = ref<Game2048GridSize>(Game2048GridSize.FOUR)
+const selectedPicrossDifficulty = ref<PicrossDifficulty>(PicrossDifficulty.EASY)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const totalGamesPlayed = computed(() => {
@@ -65,8 +74,10 @@ const totalGamesPlayed = computed(() => {
     return TangoStatsManager.getTotalGamesPlayed()
   } else if (selectedGameType.value === 'minesweeper') {
     return MinesweeperStatsManager.getTotalGamesPlayed()
-  } else {
+  } else if (selectedGameType.value === 'game2048') {
     return Game2048StatsManager.getTotalGamesPlayed()
+  } else {
+    return PicrossStatsManager.getTotalGamesPlayed()
   }
 })
 
@@ -77,8 +88,10 @@ const bestScore = computed(() => {
     return TangoStatsManager.getBestScore()
   } else if (selectedGameType.value === 'minesweeper') {
     return MinesweeperStatsManager.getBestScore()
-  } else {
+  } else if (selectedGameType.value === 'game2048') {
     return Game2048StatsManager.getBestScore()
+  } else {
+    return PicrossStatsManager.getBestScore()
   }
 })
 
@@ -89,8 +102,10 @@ const currentStats = computed(() => {
     return TangoStatsManager.loadDifficultyStats(selectedTangoDifficulty.value)
   } else if (selectedGameType.value === 'minesweeper') {
     return MinesweeperStatsManager.loadDifficultyStats(selectedMinesweeperDifficulty.value)
-  } else {
+  } else if (selectedGameType.value === 'game2048') {
     return Game2048StatsManager.loadDifficultyStats(selected2048GridSize.value)
+  } else {
+    return PicrossStatsManager.loadDifficultyStats(selectedPicrossDifficulty.value)
   }
 })
 
@@ -106,6 +121,8 @@ const difficulties = computed(() => {
     return tangoDifficulties
   } else if (selectedGameType.value === 'minesweeper') {
     return minesweeperDifficulties
+  } else if (selectedGameType.value === 'picross') {
+    return picrossDifficulties
   } else {
     return game2048GridSizes
   }
@@ -119,17 +136,21 @@ const currentDifficulty = computed({
       return selectedTangoDifficulty.value
     } else if (selectedGameType.value === 'minesweeper') {
       return selectedMinesweeperDifficulty.value
+    } else if (selectedGameType.value === 'picross') {
+      return selectedPicrossDifficulty.value
     } else {
       return selected2048GridSize.value
     }
   },
-  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty) => {
     if (selectedGameType.value === 'sudoku') {
       selectedDifficulty.value = value as Difficulty
     } else if (selectedGameType.value === 'tango') {
       selectedTangoDifficulty.value = value as TangoDifficulty
     } else if (selectedGameType.value === 'minesweeper') {
       selectedMinesweeperDifficulty.value = value as MinesweeperDifficulty
+    } else if (selectedGameType.value === 'picross') {
+      selectedPicrossDifficulty.value = value as PicrossDifficulty
     } else {
       selected2048GridSize.value = value as Game2048GridSize
     }
@@ -149,7 +170,7 @@ const getGridSizeCount = (gridSize: GridSize): number => {
 }
 
 // Compte le nombre de parties pour une difficulté et taille données
-const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize): number => {
+const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty): number => {
   if (selectedGameType.value === 'sudoku') {
     const stats = StatsManager.loadDifficultyStats(difficulty as Difficulty, selectedGridSize.value)
     return stats?.gamesPlayed || 0
@@ -158,6 +179,9 @@ const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | Minesweep
     return stats?.gamesPlayed || 0
   } else if (selectedGameType.value === 'minesweeper') {
     const stats = MinesweeperStatsManager.loadDifficultyStats(difficulty as MinesweeperDifficulty)
+    return stats?.gamesPlayed || 0
+  } else if (selectedGameType.value === 'picross') {
+    const stats = PicrossStatsManager.loadDifficultyStats(difficulty as PicrossDifficulty)
     return stats?.gamesPlayed || 0
   } else {
     const stats = Game2048StatsManager.loadDifficultyStats(difficulty as Game2048GridSize)
@@ -236,6 +260,13 @@ function getScoreClass(score: number): string {
         >
           🎯 2048
           <span class="count">({{ selectedGameType === 'game2048' ? totalGamesPlayed : Game2048StatsManager.getTotalGamesPlayed() }})</span>
+        </button>
+        <button
+          :class="{ active: selectedGameType === 'picross' }"
+          @click="selectedGameType = 'picross'"
+        >
+          🧩 Picross
+          <span class="count">({{ selectedGameType === 'picross' ? totalGamesPlayed : PicrossStatsManager.getTotalGamesPlayed() }})</span>
         </button>
       </div>
 

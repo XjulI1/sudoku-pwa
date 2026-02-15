@@ -4,6 +4,7 @@ import { useSudokuStore } from '@/stores/sudoku'
 import { useTangoStore } from '@/stores/tango'
 import { useMinesweeperStore } from '@/stores/minesweeper'
 import { useGame2048Store } from '@/stores/game2048'
+import { usePicrossStore } from '@/stores/picross'
 import DifficultySelector from '@/components/DifficultySelector.vue'
 import GameHeader from '@/components/GameHeader.vue'
 import SudokuGrid from '@/components/SudokuGrid.vue'
@@ -17,15 +18,19 @@ import MinesweeperControls from '@/components/MinesweeperControls.vue'
 import Game2048Header from '@/components/Game2048Header.vue'
 import Game2048Grid from '@/components/Game2048Grid.vue'
 import Game2048Controls from '@/components/Game2048Controls.vue'
+import PicrossHeader from '@/components/PicrossHeader.vue'
+import PicrossGrid from '@/components/PicrossGrid.vue'
+import PicrossControls from '@/components/PicrossControls.vue'
 import Statistics from '@/components/Statistics.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
 const minesweeperStore = useMinesweeperStore()
 const game2048Store = useGame2048Store()
+const picrossStore = usePicrossStore()
 const currentGameType = ref<GameType>('sudoku')
 const showMenu = ref(false)
 const showStats = ref(false)
@@ -38,8 +43,10 @@ const hasActiveGame = computed(() => {
     return tangoStore.grid.length > 0
   } else if (currentGameType.value === 'minesweeper') {
     return minesweeperStore.grid.length > 0
-  } else {
+  } else if (currentGameType.value === 'game2048') {
     return game2048Store.grid.length > 0
+  } else {
+    return picrossStore.grid.length > 0
   }
 })
 
@@ -49,6 +56,7 @@ onMounted(() => {
   const tangoLoaded = tangoStore.loadGame()
   const minesweeperLoaded = minesweeperStore.loadGame()
   const game2048Loaded = game2048Store.loadGame()
+  const picrossLoaded = picrossStore.loadGame()
 
   if (sudokuLoaded) {
     currentGameType.value = 'sudoku'
@@ -61,6 +69,9 @@ onMounted(() => {
     showMenu.value = false
   } else if (game2048Loaded) {
     currentGameType.value = 'game2048'
+    showMenu.value = false
+  } else if (picrossLoaded) {
+    currentGameType.value = 'picross'
     showMenu.value = false
   } else {
     showMenu.value = true
@@ -87,8 +98,10 @@ const confirmNewGame = () => {
     tangoStore.resetGame()
   } else if (currentGameType.value === 'minesweeper') {
     minesweeperStore.resetGame()
-  } else {
+  } else if (currentGameType.value === 'game2048') {
     game2048Store.resetGame()
+  } else {
+    picrossStore.resetGame()
   }
   showMenu.value = true
 }
@@ -131,10 +144,17 @@ const closeStats = () => {
       </template>
 
       <!-- 2048 Game -->
-      <template v-else>
+      <template v-else-if="currentGameType === 'game2048'">
         <Game2048Header @new-game="startNewGameFromMenu" />
         <Game2048Grid />
         <Game2048Controls />
+      </template>
+
+      <!-- Picross Game -->
+      <template v-else>
+        <PicrossHeader @new-game="startNewGameFromMenu" />
+        <PicrossGrid />
+        <PicrossControls />
       </template>
     </div>
 
