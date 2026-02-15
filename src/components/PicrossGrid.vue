@@ -89,17 +89,19 @@ const cellClass = (row: number, col: number) => {
 }
 
 .picross-grid-wrapper {
-  max-width: min(90vw, 600px);
+  max-width: min(95vw, 600px);
   overflow: auto;
 }
 
 .picross-table {
   border-collapse: collapse;
   border-spacing: 0;
+  border: 2px solid var(--border-thick);
 }
 
 .corner-cell {
   background-color: var(--bg);
+  border: none;
 }
 
 /* Indices des colonnes */
@@ -107,7 +109,7 @@ const cellClass = (row: number, col: number) => {
   padding: 0.25rem 0;
   background-color: var(--bg);
   vertical-align: bottom;
-  min-width: 1.5rem;
+  border: none;
 }
 
 .col-clue.clue-complete .clue-number {
@@ -121,6 +123,7 @@ const cellClass = (row: number, col: number) => {
   background-color: var(--bg);
   text-align: right;
   white-space: nowrap;
+  border: none;
 }
 
 .row-clue.clue-complete .clue-number {
@@ -148,7 +151,7 @@ const cellClass = (row: number, col: number) => {
 }
 
 .clue-number {
-  font-size: clamp(0.65rem, 1.5vw, 0.85rem);
+  font-size: clamp(0.7rem, 2vw, 0.9rem);
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;
@@ -158,8 +161,8 @@ const cellClass = (row: number, col: number) => {
 
 /* Cellules de la grille */
 .picross-cell {
-  width: clamp(1.5rem, 4vw, 2.5rem);
-  height: clamp(1.5rem, 4vw, 2.5rem);
+  width: clamp(1.75rem, 6vw, 2.5rem);
+  height: clamp(1.75rem, 6vw, 2.5rem);
   border: 1px solid var(--border-light);
   background-color: var(--cell-bg);
   cursor: pointer;
@@ -188,36 +191,9 @@ const cellClass = (row: number, col: number) => {
   background-color: var(--error-text);
 }
 
-/* Bordures épaisses tous les 5 cellules */
-.picross-cell:nth-child(5n + 1) {
-  border-left: 2px solid var(--border-thick);
-}
-
-tr:nth-child(5n + 1) .picross-cell {
-  border-top: 2px solid var(--border-thick);
-}
-
-/* Bordure extérieure */
-thead + tbody tr:first-child .picross-cell {
-  border-top: 2px solid var(--border-thick);
-}
-
-tbody tr:last-child .picross-cell {
-  border-bottom: 2px solid var(--border-thick);
-}
-
-tbody tr .picross-cell:last-child {
-  border-right: 2px solid var(--border-thick);
-}
-
-/* Le premier picross-cell de chaque ligne (qui suit le row-clue th) */
-tbody tr .picross-cell:first-of-type {
-  border-left: 2px solid var(--border-thick);
-}
-
 @media (max-width: 640px) {
   .picross-grid-container {
-    padding: 0.5rem;
+    padding: 0.25rem;
   }
 
   .picross-grid-wrapper {
@@ -225,11 +201,16 @@ tbody tr .picross-cell:first-of-type {
   }
 
   .clue-number {
-    font-size: clamp(0.55rem, 1.2vw, 0.75rem);
+    font-size: clamp(0.6rem, 2.5vw, 0.8rem);
   }
 
   .row-clue {
     padding: 0 0.25rem;
+  }
+
+  .picross-cell {
+    width: clamp(1.5rem, 7vw, 2.25rem);
+    height: clamp(1.5rem, 7vw, 2.25rem);
   }
 }
 </style>

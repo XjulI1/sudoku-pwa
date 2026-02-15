@@ -8,7 +8,9 @@ export class PicrossScoreCalculator {
   // Temps de référence par difficulté (en millisecondes)
   private static readonly REFERENCE_TIMES: Record<PicrossDifficulty, number> = {
     [PicrossDifficulty.EASY]: 3 * 60 * 1000, // 3 minutes (5x5)
+    [PicrossDifficulty.MEDIUM_SMALL]: 6 * 60 * 1000, // 6 minutes (8x8)
     [PicrossDifficulty.MEDIUM]: 10 * 60 * 1000, // 10 minutes (10x10)
+    [PicrossDifficulty.MEDIUM_LARGE]: 18 * 60 * 1000, // 18 minutes (12x12)
     [PicrossDifficulty.HARD]: 25 * 60 * 1000 // 25 minutes (15x15)
   }
 

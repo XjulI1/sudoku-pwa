@@ -13,8 +13,12 @@ const difficultyLabel = computed(() => {
   switch (store.difficulty) {
     case PicrossDifficulty.EASY:
       return 'Facile (5x5)'
+    case PicrossDifficulty.MEDIUM_SMALL:
+      return 'Moyen (8x8)'
     case PicrossDifficulty.MEDIUM:
-      return 'Moyen (10x10)'
+      return 'Intermédiaire (10x10)'
+    case PicrossDifficulty.MEDIUM_LARGE:
+      return 'Avancé (12x12)'
     case PicrossDifficulty.HARD:
       return 'Difficile (15x15)'
     default:

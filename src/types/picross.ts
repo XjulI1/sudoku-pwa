@@ -20,7 +20,9 @@ export type PicrossClue = number[]
 // Difficulté du jeu Picross (taille de grille)
 export const enum PicrossDifficulty {
   EASY = 'easy', // 5x5
+  MEDIUM_SMALL = 'medium_small', // 8x8
   MEDIUM = 'medium', // 10x10
+  MEDIUM_LARGE = 'medium_large', // 12x12
   HARD = 'hard' // 15x15
 }
 

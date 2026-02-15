@@ -50,9 +50,11 @@ const game2048GridSizes = [
 ]
 
 const picrossDifficulties = [
-  { value: PicrossDifficulty.EASY, label: 'Facile' },
-  { value: PicrossDifficulty.MEDIUM, label: 'Moyen' },
-  { value: PicrossDifficulty.HARD, label: 'Difficile' },
+  { value: PicrossDifficulty.EASY, label: '5x5' },
+  { value: PicrossDifficulty.MEDIUM_SMALL, label: '8x8' },
+  { value: PicrossDifficulty.MEDIUM, label: '10x10' },
+  { value: PicrossDifficulty.MEDIUM_LARGE, label: '12x12' },
+  { value: PicrossDifficulty.HARD, label: '15x15' },
 ]
 
 const gridSizes = [

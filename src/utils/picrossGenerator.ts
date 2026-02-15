@@ -12,8 +12,12 @@ export class PicrossGenerator {
     switch (difficulty) {
       case PicrossDifficulty.EASY:
         return 5
+      case PicrossDifficulty.MEDIUM_SMALL:
+        return 8
       case PicrossDifficulty.MEDIUM:
         return 10
+      case PicrossDifficulty.MEDIUM_LARGE:
+        return 12
       case PicrossDifficulty.HARD:
         return 15
     }
@@ -26,8 +30,12 @@ export class PicrossGenerator {
     switch (difficulty) {
       case PicrossDifficulty.EASY:
         return 0.6
+      case PicrossDifficulty.MEDIUM_SMALL:
+        return 0.58
       case PicrossDifficulty.MEDIUM:
         return 0.55
+      case PicrossDifficulty.MEDIUM_LARGE:
+        return 0.52
       case PicrossDifficulty.HARD:
         return 0.5
     }

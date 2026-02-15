@@ -82,7 +82,9 @@ const game2048GridSizes = [
 
 const picrossDifficulties = [
   { value: PicrossDifficulty.EASY, label: 'Facile', description: 'Grille 5x5' },
-  { value: PicrossDifficulty.MEDIUM, label: 'Moyen', description: 'Grille 10x10' },
+  { value: PicrossDifficulty.MEDIUM_SMALL, label: 'Moyen', description: 'Grille 8x8' },
+  { value: PicrossDifficulty.MEDIUM, label: 'Intermédiaire', description: 'Grille 10x10' },
+  { value: PicrossDifficulty.MEDIUM_LARGE, label: 'Avancé', description: 'Grille 12x12' },
   { value: PicrossDifficulty.HARD, label: 'Difficile', description: 'Grille 15x15' },
 ]
 

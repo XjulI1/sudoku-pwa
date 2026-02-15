@@ -101,7 +101,9 @@ export class PicrossStatsManager {
   private static createEmptyStats(): Record<PicrossDifficulty, PicrossDifficultyStats | undefined> {
     return {
       [PicrossDifficulty.EASY]: undefined,
+      [PicrossDifficulty.MEDIUM_SMALL]: undefined,
       [PicrossDifficulty.MEDIUM]: undefined,
+      [PicrossDifficulty.MEDIUM_LARGE]: undefined,
       [PicrossDifficulty.HARD]: undefined
     }
   }
