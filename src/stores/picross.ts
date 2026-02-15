@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, triggerRef } from 'vue'
+import { ref, computed } from 'vue'
 import {
   PicrossCellState,
   PicrossDifficulty,
@@ -29,8 +29,6 @@ export const usePicrossStore = defineStore('picross', () => {
   const errorsCount = ref(0)
   const totalPauseTime = ref(0)
   const lastPauseStart = ref<number | null>(null)
-  // Mode de saisie: 'fill' pour remplir, 'cross' pour marquer comme vide
-  const inputMode = ref<'fill' | 'cross'>('fill')
 
   // Timer
   let timerInterval: number | null = null
@@ -115,8 +113,7 @@ export const usePicrossStore = defineStore('picross', () => {
       Array.from({ length: size }, () => ({
         state: PicrossCellState.EMPTY,
         solution: false,
-        isError: false,
-        isHighlighted: false
+        isError: false
       }))
     )
   }
@@ -147,7 +144,6 @@ export const usePicrossStore = defineStore('picross', () => {
     errorsCount.value = 0
     totalPauseTime.value = 0
     lastPauseStart.value = null
-    inputMode.value = 'fill'
 
     startTimer()
     saveGame()
@@ -186,34 +182,15 @@ export const usePicrossStore = defineStore('picross', () => {
     const cell = grid.value[row]![col]!
     selectedCell.value = { row, col }
 
-    if (inputMode.value === 'fill') {
-      if (cell.state === PicrossCellState.FILLED) {
-        cell.state = PicrossCellState.EMPTY
-      } else {
-        cell.state = PicrossCellState.FILLED
-      }
+    if (cell.state === PicrossCellState.FILLED) {
+      cell.state = PicrossCellState.EMPTY
     } else {
-      if (cell.state === PicrossCellState.CROSSED) {
-        cell.state = PicrossCellState.EMPTY
-      } else {
-        cell.state = PicrossCellState.CROSSED
-      }
+      cell.state = PicrossCellState.FILLED
     }
 
-    highlightRelatedCells(row, col)
     updateErrors()
     checkCompletion()
     saveGame()
-  }
-
-  // Surbrillance des cellules liées (ligne + colonne)
-  function highlightRelatedCells(row: number, col: number) {
-    for (let r = 0; r < gridSize.value; r++) {
-      for (let c = 0; c < gridSize.value; c++) {
-        grid.value[r]![c]!.isHighlighted = r === row || c === col
-      }
-    }
-    triggerRef(grid)
   }
 
   // Effacer la cellule sélectionnée
@@ -233,21 +210,15 @@ export const usePicrossStore = defineStore('picross', () => {
           grid.value[row]![col]!.isError = false
         }
       }
-      triggerRef(grid)
       return
     }
 
     for (let row = 0; row < gridSize.value; row++) {
       for (let col = 0; col < gridSize.value; col++) {
         const cell = grid.value[row]![col]!
-        if (cell.state === PicrossCellState.FILLED && !cell.solution) {
-          cell.isError = true
-        } else {
-          cell.isError = false
-        }
+        cell.isError = cell.state === PicrossCellState.FILLED && !cell.solution
       }
     }
-    triggerRef(grid)
   }
 
   function countErrors() {
@@ -273,7 +244,6 @@ export const usePicrossStore = defineStore('picross', () => {
         grid.value[row]![col]!.isError = false
       }
     }
-    triggerRef(grid)
   }
 
   function updateErrors() {
@@ -340,11 +310,6 @@ export const usePicrossStore = defineStore('picross', () => {
     saveGame()
   }
 
-  // Toggle le mode de saisie
-  function toggleInputMode() {
-    inputMode.value = inputMode.value === 'fill' ? 'cross' : 'fill'
-  }
-
   // Sauvegarder
   function saveGame() {
     const state = {
@@ -358,8 +323,7 @@ export const usePicrossStore = defineStore('picross', () => {
       isCompleted: isCompleted.value,
       hintsUsed: hintsUsed.value,
       errorsCount: errorsCount.value,
-      totalPauseTime: totalPauseTime.value,
-      inputMode: inputMode.value
+      totalPauseTime: totalPauseTime.value
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }
@@ -382,7 +346,6 @@ export const usePicrossStore = defineStore('picross', () => {
       hintsUsed.value = state.hintsUsed
       errorsCount.value = state.errorsCount || 0
       totalPauseTime.value = state.totalPauseTime || 0
-      inputMode.value = state.inputMode || 'fill'
       isPaused.value = false
       selectedCell.value = null
 
@@ -414,7 +377,6 @@ export const usePicrossStore = defineStore('picross', () => {
     errorsCount.value = 0
     totalPauseTime.value = 0
     lastPauseStart.value = null
-    inputMode.value = 'fill'
     localStorage.removeItem(STORAGE_KEY)
   }
 
@@ -434,7 +396,6 @@ export const usePicrossStore = defineStore('picross', () => {
     showErrors,
     errorsCount,
     totalPauseTime,
-    inputMode,
 
     // Computed
     formattedTime,
@@ -450,7 +411,6 @@ export const usePicrossStore = defineStore('picross', () => {
     clearSelectedCell,
     updateErrors,
     getHint,
-    toggleInputMode,
     saveGame,
     loadGame,
     resetGame

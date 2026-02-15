@@ -1,8 +1,7 @@
 // État possible d'une cellule Picross
 export const enum PicrossCellState {
   EMPTY = 'empty', // Non remplie
-  FILLED = 'filled', // Remplie (noire)
-  CROSSED = 'crossed' // Marquée comme vide (X)
+  FILLED = 'filled' // Remplie (noire)
 }
 
 // Représente une cellule du jeu Picross
@@ -10,7 +9,6 @@ export interface PicrossCell {
   state: PicrossCellState
   solution: boolean // true si la cellule doit être remplie dans la solution
   isError: boolean
-  isHighlighted: boolean
 }
 
 // Grille de jeu Picross

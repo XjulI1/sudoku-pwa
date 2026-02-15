@@ -17,9 +17,7 @@ const cellClass = (row: number, col: number) => {
   return {
     'picross-cell': true,
     filled: cell.state === PicrossCellState.FILLED,
-    crossed: cell.state === PicrossCellState.CROSSED,
     error: cell.isError,
-    highlighted: cell.isHighlighted,
     selected: isSelected(row, col)
   }
 }
@@ -72,7 +70,6 @@ const cellClass = (row: number, col: number) => {
               :class="cellClass(rowIndex, colIndex)"
               @click="store.selectCell(rowIndex, colIndex)"
             >
-              <span v-if="cell.state === PicrossCellState.CROSSED" class="cross-mark">X</span>
             </td>
           </tr>
         </tbody>
@@ -177,10 +174,6 @@ const cellClass = (row: number, col: number) => {
   background-color: var(--cell-hover);
 }
 
-.picross-cell.highlighted {
-  background-color: var(--cell-highlighted);
-}
-
 .picross-cell.selected {
   outline: 2px solid var(--primary);
   outline-offset: -2px;
@@ -191,19 +184,8 @@ const cellClass = (row: number, col: number) => {
   background-color: var(--text);
 }
 
-.picross-cell.crossed {
-  background-color: var(--cell-bg);
-}
-
 .picross-cell.error {
   background-color: var(--error-text);
-}
-
-.cross-mark {
-  font-size: clamp(0.7rem, 2vw, 1rem);
-  font-weight: 700;
-  color: var(--text-secondary);
-  line-height: 1;
 }
 
 /* Bordures épaisses tous les 5 cellules */
