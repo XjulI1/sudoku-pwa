@@ -35,6 +35,7 @@ const currentGameType = ref<GameType>('sudoku')
 const showMenu = ref(false)
 const showStats = ref(false)
 const showConfirmNewGame = ref(false)
+const pendingAction = ref<'restart' | 'home' | null>(null)
 
 const hasActiveGame = computed(() => {
   if (currentGameType.value === 'sudoku') {
@@ -83,15 +84,39 @@ const handleStart = (gameType: GameType) => {
   showMenu.value = false
 }
 
-const startNewGameFromMenu = () => {
+const requestNewGame = () => {
   if (hasActiveGame.value) {
+    pendingAction.value = 'restart'
     showConfirmNewGame.value = true
   } else {
-    confirmNewGame()
+    restartCurrentGame()
   }
 }
 
-const confirmNewGame = () => {
+const requestGoHome = () => {
+  if (hasActiveGame.value) {
+    pendingAction.value = 'home'
+    showConfirmNewGame.value = true
+  } else {
+    goHome()
+  }
+}
+
+const restartCurrentGame = () => {
+  if (currentGameType.value === 'sudoku') {
+    sudokuStore.newGame(sudokuStore.difficulty, sudokuStore.gridSize)
+  } else if (currentGameType.value === 'tango') {
+    tangoStore.newGame(tangoStore.difficulty)
+  } else if (currentGameType.value === 'minesweeper') {
+    minesweeperStore.newGame(minesweeperStore.difficulty)
+  } else if (currentGameType.value === 'game2048') {
+    game2048Store.newGame(game2048Store.gridSize)
+  } else {
+    picrossStore.newGame(picrossStore.difficulty)
+  }
+}
+
+const goHome = () => {
   if (currentGameType.value === 'sudoku') {
     sudokuStore.resetGame()
   } else if (currentGameType.value === 'tango') {
@@ -105,6 +130,30 @@ const confirmNewGame = () => {
   }
   showMenu.value = true
 }
+
+const confirmPendingAction = () => {
+  if (pendingAction.value === 'restart') {
+    restartCurrentGame()
+  } else if (pendingAction.value === 'home') {
+    goHome()
+  }
+  pendingAction.value = null
+}
+
+const confirmModalText = computed(() => {
+  if (pendingAction.value === 'home') {
+    return {
+      title: "Revenir à l'accueil",
+      message: "Voulez-vous vraiment revenir à l'accueil ? La partie en cours sera perdue.",
+      confirmText: "Revenir à l'accueil",
+    }
+  }
+  return {
+    title: 'Nouvelle partie',
+    message: 'Voulez-vous vraiment commencer une nouvelle partie ? La partie en cours sera perdue.',
+    confirmText: 'Nouvelle partie',
+  }
+})
 
 const openStats = () => {
   showStats.value = true
@@ -124,35 +173,35 @@ const closeStats = () => {
     <div v-else class="game-view">
       <!-- Sudoku Game -->
       <template v-if="currentGameType === 'sudoku'">
-        <GameHeader @new-game="startNewGameFromMenu" />
+        <GameHeader @new-game="requestNewGame" @go-home="requestGoHome" />
         <SudokuGrid />
         <GameControls />
       </template>
 
       <!-- Tango Game -->
       <template v-else-if="currentGameType === 'tango'">
-        <TangoHeader @new-game="startNewGameFromMenu" />
+        <TangoHeader @new-game="requestNewGame" @go-home="requestGoHome" />
         <TangoGrid />
         <TangoControls />
       </template>
 
       <!-- Minesweeper Game -->
       <template v-else-if="currentGameType === 'minesweeper'">
-        <MinesweeperHeader @new-game="startNewGameFromMenu" />
+        <MinesweeperHeader @new-game="requestNewGame" @go-home="requestGoHome" />
         <MinesweeperGrid />
         <MinesweeperControls />
       </template>
 
       <!-- 2048 Game -->
       <template v-else-if="currentGameType === 'game2048'">
-        <Game2048Header @new-game="startNewGameFromMenu" />
+        <Game2048Header @new-game="requestNewGame" @go-home="requestGoHome" />
         <Game2048Grid />
         <Game2048Controls />
       </template>
 
       <!-- Picross Game -->
       <template v-else>
-        <PicrossHeader @new-game="startNewGameFromMenu" />
+        <PicrossHeader @new-game="requestNewGame" @go-home="requestGoHome" />
         <PicrossGrid />
         <PicrossControls />
       </template>
@@ -162,11 +211,12 @@ const closeStats = () => {
 
     <ConfirmModal
       v-model="showConfirmNewGame"
-      title="Nouvelle partie"
-      message="Voulez-vous vraiment commencer une nouvelle partie ? La partie en cours sera perdue."
-      confirm-text="Nouvelle partie"
+      :title="confirmModalText.title"
+      :message="confirmModalText.message"
+      :confirm-text="confirmModalText.confirmText"
       cancel-text="Annuler"
-      @confirm="confirmNewGame"
+      @confirm="confirmPendingAction"
+      @cancel="pendingAction = null"
     />
   </div>
 </template>
