@@ -5,6 +5,7 @@ import { useTangoStore } from '@/stores/tango'
 import { useMinesweeperStore } from '@/stores/minesweeper'
 import { useGame2048Store } from '@/stores/game2048'
 import { usePicrossStore } from '@/stores/picross'
+import { useDedaleStore } from '@/stores/dedale'
 import DifficultySelector from '@/components/DifficultySelector.vue'
 import GameHeader from '@/components/GameHeader.vue'
 import SudokuGrid from '@/components/SudokuGrid.vue'
@@ -21,16 +22,20 @@ import Game2048Controls from '@/components/Game2048Controls.vue'
 import PicrossHeader from '@/components/PicrossHeader.vue'
 import PicrossGrid from '@/components/PicrossGrid.vue'
 import PicrossControls from '@/components/PicrossControls.vue'
+import DedaleHeader from '@/components/DedaleHeader.vue'
+import DedaleGrid from '@/components/DedaleGrid.vue'
+import DedaleControls from '@/components/DedaleControls.vue'
 import Statistics from '@/components/Statistics.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
 const minesweeperStore = useMinesweeperStore()
 const game2048Store = useGame2048Store()
 const picrossStore = usePicrossStore()
+const dedaleStore = useDedaleStore()
 const currentGameType = ref<GameType>('sudoku')
 const showMenu = ref(false)
 const showStats = ref(false)
@@ -46,8 +51,10 @@ const hasActiveGame = computed(() => {
     return minesweeperStore.grid.length > 0
   } else if (currentGameType.value === 'game2048') {
     return game2048Store.grid.length > 0
-  } else {
+  } else if (currentGameType.value === 'picross') {
     return picrossStore.grid.length > 0
+  } else {
+    return dedaleStore.grid.length > 0
   }
 })
 
@@ -58,6 +65,7 @@ onMounted(() => {
   const minesweeperLoaded = minesweeperStore.loadGame()
   const game2048Loaded = game2048Store.loadGame()
   const picrossLoaded = picrossStore.loadGame()
+  const dedaleLoaded = dedaleStore.loadGame()
 
   if (sudokuLoaded) {
     currentGameType.value = 'sudoku'
@@ -73,6 +81,9 @@ onMounted(() => {
     showMenu.value = false
   } else if (picrossLoaded) {
     currentGameType.value = 'picross'
+    showMenu.value = false
+  } else if (dedaleLoaded) {
+    currentGameType.value = 'dedale'
     showMenu.value = false
   } else {
     showMenu.value = true
@@ -111,8 +122,10 @@ const restartCurrentGame = () => {
     minesweeperStore.newGame(minesweeperStore.difficulty)
   } else if (currentGameType.value === 'game2048') {
     game2048Store.newGame(game2048Store.gridSize)
-  } else {
+  } else if (currentGameType.value === 'picross') {
     picrossStore.newGame(picrossStore.difficulty)
+  } else {
+    dedaleStore.newGame(dedaleStore.difficulty)
   }
 }
 
@@ -125,8 +138,10 @@ const goHome = () => {
     minesweeperStore.resetGame()
   } else if (currentGameType.value === 'game2048') {
     game2048Store.resetGame()
-  } else {
+  } else if (currentGameType.value === 'picross') {
     picrossStore.resetGame()
+  } else {
+    dedaleStore.resetGame()
   }
   showMenu.value = true
 }
@@ -200,10 +215,17 @@ const closeStats = () => {
       </template>
 
       <!-- Picross Game -->
-      <template v-else>
+      <template v-else-if="currentGameType === 'picross'">
         <PicrossHeader @new-game="requestNewGame" @go-home="requestGoHome" />
         <PicrossGrid />
         <PicrossControls />
+      </template>
+
+      <!-- Dédale Game -->
+      <template v-else>
+        <DedaleHeader @new-game="requestNewGame" @go-home="requestGoHome" />
+        <DedaleGrid />
+        <DedaleControls />
       </template>
     </div>
 
