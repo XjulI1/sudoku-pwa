@@ -5,11 +5,13 @@ import { TangoDifficulty } from '@/types/tango'
 import { MinesweeperDifficulty } from '@/types/minesweeper'
 import { Game2048GridSize } from '@/types/game2048'
 import { PicrossDifficulty } from '@/types/picross'
+import { DedaleDifficulty } from '@/types/dedale'
 import { StatsManager } from '@/utils/statsManager'
 import { TangoStatsManager } from '@/utils/tangoStatsManager'
 import { MinesweeperStatsManager } from '@/utils/minesweeperStatsManager'
 import { Game2048StatsManager } from '@/utils/game2048StatsManager'
 import { PicrossStatsManager } from '@/utils/picrossStatsManager'
+import { DedaleStatsManager } from '@/utils/dedaleStatsManager'
 
 defineOptions({
   name: 'GameStatistics'
@@ -19,7 +21,7 @@ defineEmits<{
   close: []
 }>()
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale'
 
 const selectedGameType = ref<GameType>('sudoku')
 
@@ -57,6 +59,12 @@ const picrossDifficulties = [
   { value: PicrossDifficulty.HARD, label: '15x15' },
 ]
 
+const dedaleDifficulties = [
+  { value: DedaleDifficulty.FACILE, label: 'Facile' },
+  { value: DedaleDifficulty.MOYEN, label: 'Moyen' },
+  { value: DedaleDifficulty.DIFFICILE, label: 'Difficile' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6' },
   { value: GridSize.NINE, label: '9x9' },
@@ -67,6 +75,7 @@ const selectedTangoDifficulty = ref<TangoDifficulty>(TangoDifficulty.MEDIUM)
 const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDifficulty.BEGINNER)
 const selected2048GridSize = ref<Game2048GridSize>(Game2048GridSize.FOUR)
 const selectedPicrossDifficulty = ref<PicrossDifficulty>(PicrossDifficulty.EASY)
+const selectedDedaleDifficulty = ref<DedaleDifficulty>(DedaleDifficulty.MOYEN)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const totalGamesPlayed = computed(() => {
@@ -78,8 +87,10 @@ const totalGamesPlayed = computed(() => {
     return MinesweeperStatsManager.getTotalGamesPlayed()
   } else if (selectedGameType.value === 'game2048') {
     return Game2048StatsManager.getTotalGamesPlayed()
-  } else {
+  } else if (selectedGameType.value === 'picross') {
     return PicrossStatsManager.getTotalGamesPlayed()
+  } else {
+    return DedaleStatsManager.getTotalGamesPlayed()
   }
 })
 
@@ -92,8 +103,10 @@ const bestScore = computed(() => {
     return MinesweeperStatsManager.getBestScore()
   } else if (selectedGameType.value === 'game2048') {
     return Game2048StatsManager.getBestScore()
-  } else {
+  } else if (selectedGameType.value === 'picross') {
     return PicrossStatsManager.getBestScore()
+  } else {
+    return DedaleStatsManager.getBestScore()
   }
 })
 
@@ -106,8 +119,10 @@ const currentStats = computed(() => {
     return MinesweeperStatsManager.loadDifficultyStats(selectedMinesweeperDifficulty.value)
   } else if (selectedGameType.value === 'game2048') {
     return Game2048StatsManager.loadDifficultyStats(selected2048GridSize.value)
-  } else {
+  } else if (selectedGameType.value === 'picross') {
     return PicrossStatsManager.loadDifficultyStats(selectedPicrossDifficulty.value)
+  } else {
+    return DedaleStatsManager.loadDifficultyStats(selectedDedaleDifficulty.value)
   }
 })
 
@@ -125,6 +140,8 @@ const difficulties = computed(() => {
     return minesweeperDifficulties
   } else if (selectedGameType.value === 'picross') {
     return picrossDifficulties
+  } else if (selectedGameType.value === 'dedale') {
+    return dedaleDifficulties
   } else {
     return game2048GridSizes
   }
@@ -140,11 +157,13 @@ const currentDifficulty = computed({
       return selectedMinesweeperDifficulty.value
     } else if (selectedGameType.value === 'picross') {
       return selectedPicrossDifficulty.value
+    } else if (selectedGameType.value === 'dedale') {
+      return selectedDedaleDifficulty.value
     } else {
       return selected2048GridSize.value
     }
   },
-  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty) => {
     if (selectedGameType.value === 'sudoku') {
       selectedDifficulty.value = value as Difficulty
     } else if (selectedGameType.value === 'tango') {
@@ -153,6 +172,8 @@ const currentDifficulty = computed({
       selectedMinesweeperDifficulty.value = value as MinesweeperDifficulty
     } else if (selectedGameType.value === 'picross') {
       selectedPicrossDifficulty.value = value as PicrossDifficulty
+    } else if (selectedGameType.value === 'dedale') {
+      selectedDedaleDifficulty.value = value as DedaleDifficulty
     } else {
       selected2048GridSize.value = value as Game2048GridSize
     }
@@ -172,7 +193,7 @@ const getGridSizeCount = (gridSize: GridSize): number => {
 }
 
 // Compte le nombre de parties pour une difficulté et taille données
-const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty): number => {
+const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty): number => {
   if (selectedGameType.value === 'sudoku') {
     const stats = StatsManager.loadDifficultyStats(difficulty as Difficulty, selectedGridSize.value)
     return stats?.gamesPlayed || 0
@@ -184,6 +205,9 @@ const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | Minesweep
     return stats?.gamesPlayed || 0
   } else if (selectedGameType.value === 'picross') {
     const stats = PicrossStatsManager.loadDifficultyStats(difficulty as PicrossDifficulty)
+    return stats?.gamesPlayed || 0
+  } else if (selectedGameType.value === 'dedale') {
+    const stats = DedaleStatsManager.loadDifficultyStats(difficulty as DedaleDifficulty)
     return stats?.gamesPlayed || 0
   } else {
     const stats = Game2048StatsManager.loadDifficultyStats(difficulty as Game2048GridSize)
@@ -270,6 +294,13 @@ function getScoreClass(score: number): string {
           🧩 Picross
           <span class="count">({{ selectedGameType === 'picross' ? totalGamesPlayed : PicrossStatsManager.getTotalGamesPlayed() }})</span>
         </button>
+        <button
+          :class="{ active: selectedGameType === 'dedale' }"
+          @click="selectedGameType = 'dedale'"
+        >
+          🧵 Dédale
+          <span class="count">({{ selectedGameType === 'dedale' ? totalGamesPlayed : DedaleStatsManager.getTotalGamesPlayed() }})</span>
+        </button>
       </div>
 
       <div v-if="selectedGameType === 'sudoku'" class="grid-size-tabs">
@@ -345,6 +376,10 @@ function getScoreClass(score: number): string {
             {{ (currentStats.totalErrors / currentStats.gamesPlayed).toFixed(1) }}
           </div>
         </div>
+        <div v-if="'totalRetractions' in currentStats" class="stat-card">
+          <div class="stat-label">Total rétractations</div>
+          <div class="stat-value">{{ currentStats.totalRetractions }}</div>
+        </div>
       </div>
 
       <div class="history-section">
@@ -359,6 +394,7 @@ function getScoreClass(score: number): string {
               <div class="history-meta">
                 <span v-if="'won' in game">{{ game.won ? 'Gagné' : 'Perdu' }}</span>
                 <span v-if="'errorsCount' in game">{{ game.errorsCount }} erreurs</span>
+                <span v-if="'retractionsCount' in game">{{ game.retractionsCount }} rétractations</span>
                 <span v-if="'hintsUsed' in game">{{ game.hintsUsed }} indices</span>
                 <span>{{ formatTime(game.pauseTime) }} pause</span>
               </div>
