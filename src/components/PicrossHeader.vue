@@ -7,6 +7,7 @@ const store = usePicrossStore()
 
 const emit = defineEmits<{
   newGame: []
+  goHome: []
 }>()
 
 const difficultyLabel = computed(() => {
@@ -64,6 +65,7 @@ const progressPercent = computed(() => Math.round(store.progress))
         Pause
       </button>
       <button class="header-btn" @click="emit('newGame')">Nouvelle partie</button>
+      <button class="header-btn" @click="emit('goHome')">Revenir à l'accueil</button>
     </div>
 
     <div v-if="store.isCompleted" class="completion-message">
@@ -153,6 +155,7 @@ const progressPercent = computed(() => Math.round(store.progress))
 .header-actions {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .header-btn {
