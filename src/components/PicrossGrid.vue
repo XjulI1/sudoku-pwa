@@ -26,7 +26,7 @@ const cellClass = (row: number, col: number) => {
 <template>
   <div class="picross-grid-container">
     <div class="picross-grid-wrapper">
-      <table class="picross-table">
+      <table class="picross-table" :style="{ '--cols': store.gridSize }">
         <!-- En-tête: indices des colonnes -->
         <thead>
           <tr>
@@ -94,6 +94,7 @@ const cellClass = (row: number, col: number) => {
 }
 
 .picross-table {
+  --cell-size: calc(min(92vw, 550px) / var(--cols));
   border-collapse: collapse;
   border-spacing: 0;
   border: 2px solid var(--border-thick);
@@ -151,7 +152,7 @@ const cellClass = (row: number, col: number) => {
 }
 
 .clue-number {
-  font-size: clamp(0.7rem, 2vw, 0.9rem);
+  font-size: calc(var(--cell-size) * 0.35);
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;
@@ -161,8 +162,8 @@ const cellClass = (row: number, col: number) => {
 
 /* Cellules de la grille */
 .picross-cell {
-  width: clamp(1.75rem, 6vw, 2.5rem);
-  height: clamp(1.75rem, 6vw, 2.5rem);
+  width: var(--cell-size);
+  height: var(--cell-size);
   border: 1px solid var(--border-light);
   background-color: var(--cell-bg);
   cursor: pointer;
@@ -200,17 +201,12 @@ const cellClass = (row: number, col: number) => {
     max-width: 100%;
   }
 
-  .clue-number {
-    font-size: clamp(0.6rem, 2.5vw, 0.8rem);
+  .picross-table {
+    --cell-size: calc(min(97vw, 480px) / var(--cols));
   }
 
   .row-clue {
     padding: 0 0.25rem;
-  }
-
-  .picross-cell {
-    width: clamp(1.5rem, 7vw, 2.25rem);
-    height: clamp(1.5rem, 7vw, 2.25rem);
   }
 }
 </style>
