@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Difficulty, GridSize } from '@/types/sudoku'
-import { TangoDifficulty } from '@/types/tango'
-import { MinesweeperDifficulty } from '@/types/minesweeper'
-import { Game2048GridSize } from '@/types/game2048'
-import { PicrossDifficulty } from '@/types/picross'
-import { DedaleDifficulty } from '@/types/dedale'
-import { TectonicDifficulty } from '@/types/tectonic'
-import { RikudoDifficulty } from '@/types/rikudo'
-import { StatsManager } from '@/utils/statsManager'
-import { TangoStatsManager } from '@/utils/tangoStatsManager'
-import { MinesweeperStatsManager } from '@/utils/minesweeperStatsManager'
-import { Game2048StatsManager } from '@/utils/game2048StatsManager'
-import { PicrossStatsManager } from '@/utils/picrossStatsManager'
-import { DedaleStatsManager } from '@/utils/dedaleStatsManager'
-import { TectonicStatsManager } from '@/utils/tectonicStatsManager'
-import { RikudoStatsManager } from '@/utils/rikudoStatsManager'
+import { Difficulty, GridSize } from '@/contexts/sudoku/types/sudoku'
+import { TangoDifficulty } from '@/contexts/tango/types/tango'
+import { MinesweeperDifficulty } from '@/contexts/minesweeper/types/minesweeper'
+import { Game2048GridSize } from '@/contexts/game2048/types/game2048'
+import { PicrossDifficulty } from '@/contexts/picross/types/picross'
+import { DedaleDifficulty } from '@/contexts/dedale/types/dedale'
+import { TectonicDifficulty } from '@/contexts/tectonic/types/tectonic'
+import { RikudoDifficulty } from '@/contexts/rikudo/types/rikudo'
+import { SudokuStatsManager } from '@/contexts/sudoku/utils/sudokuStatsManager'
+import { TangoStatsManager } from '@/contexts/tango/utils/tangoStatsManager'
+import { MinesweeperStatsManager } from '@/contexts/minesweeper/utils/minesweeperStatsManager'
+import { Game2048StatsManager } from '@/contexts/game2048/utils/game2048StatsManager'
+import { PicrossStatsManager } from '@/contexts/picross/utils/picrossStatsManager'
+import { DedaleStatsManager } from '@/contexts/dedale/utils/dedaleStatsManager'
+import { TectonicStatsManager } from '@/contexts/tectonic/utils/tectonicStatsManager'
+import { RikudoStatsManager } from '@/contexts/rikudo/utils/rikudoStatsManager'
 
 defineOptions({
   name: 'GameStatistics'
@@ -100,7 +100,7 @@ const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const totalGamesPlayed = computed(() => {
   if (selectedGameType.value === 'sudoku') {
-    return StatsManager.getTotalGamesPlayed()
+    return SudokuStatsManager.getTotalGamesPlayed()
   } else if (selectedGameType.value === 'tango') {
     return TangoStatsManager.getTotalGamesPlayed()
   } else if (selectedGameType.value === 'minesweeper') {
@@ -120,7 +120,7 @@ const totalGamesPlayed = computed(() => {
 
 const bestScore = computed(() => {
   if (selectedGameType.value === 'sudoku') {
-    return StatsManager.getBestScore()
+    return SudokuStatsManager.getBestScore()
   } else if (selectedGameType.value === 'tango') {
     return TangoStatsManager.getBestScore()
   } else if (selectedGameType.value === 'minesweeper') {
@@ -140,7 +140,7 @@ const bestScore = computed(() => {
 
 const currentStats = computed(() => {
   if (selectedGameType.value === 'sudoku') {
-    return StatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
+    return SudokuStatsManager.loadDifficultyStats(selectedDifficulty.value, selectedGridSize.value)
   } else if (selectedGameType.value === 'tango') {
     return TangoStatsManager.loadDifficultyStats(selectedTangoDifficulty.value)
   } else if (selectedGameType.value === 'minesweeper') {
@@ -228,7 +228,7 @@ const currentDifficulty = computed({
 const getGridSizeCount = (gridSize: GridSize): number => {
   let total = 0
   sudokuDifficulties.forEach((diff) => {
-    const stats = StatsManager.loadDifficultyStats(diff.value, gridSize)
+    const stats = SudokuStatsManager.loadDifficultyStats(diff.value, gridSize)
     if (stats) {
       total += stats.gamesPlayed
     }
@@ -239,7 +239,7 @@ const getGridSizeCount = (gridSize: GridSize): number => {
 // Compte le nombre de parties pour une difficulté et taille données
 const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty | TectonicDifficulty | RikudoDifficulty): number => {
   if (selectedGameType.value === 'sudoku') {
-    const stats = StatsManager.loadDifficultyStats(difficulty as Difficulty, selectedGridSize.value)
+    const stats = SudokuStatsManager.loadDifficultyStats(difficulty as Difficulty, selectedGridSize.value)
     return stats?.gamesPlayed || 0
   } else if (selectedGameType.value === 'tango') {
     const stats = TangoStatsManager.loadDifficultyStats(difficulty as TangoDifficulty)
@@ -266,7 +266,7 @@ const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | Minesweep
 }
 
 function formatTime(milliseconds: number): string {
-  return StatsManager.formatTime(milliseconds)
+  return SudokuStatsManager.formatTime(milliseconds)
 }
 
 function formatDate(timestamp: number): string {
@@ -314,7 +314,7 @@ function getScoreClass(score: number): string {
           @click="selectedGameType = 'sudoku'"
         >
           🔢 Sudoku
-          <span class="count">({{ selectedGameType === 'sudoku' ? totalGamesPlayed : StatsManager.getTotalGamesPlayed() }})</span>
+          <span class="count">({{ selectedGameType === 'sudoku' ? totalGamesPlayed : SudokuStatsManager.getTotalGamesPlayed() }})</span>
         </button>
         <button
           :class="{ active: selectedGameType === 'tango' }"
