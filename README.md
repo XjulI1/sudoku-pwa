@@ -1,36 +1,30 @@
 # Sudoku PWA
 
-Un jeu de Sudoku moderne développé avec Vue 3, TypeScript et configuré comme Progressive Web App (PWA).
+Une suite de jeux de réflexion et de puzzle développée avec Vue 3, TypeScript et configurée comme Progressive Web App (PWA). Née comme un simple Sudoku, l'application propose aujourd'hui **8 jeux** indépendants.
 
-## Fonctionnalités
+## Jeux disponibles
 
-### Gameplay
+- **Sudoku** — grilles 6x6 et 9x9, 5 niveaux de difficulté (Simple à Dieux du Sudoku), mode notes, indices.
+- **Tango** — grille 6x6, deux symboles (☀️/🌑) à placer sans 3 symboles identiques consécutifs, autant de soleils que de lunes par ligne/colonne, et contraintes `=`/`x` entre certaines cases.
+- **Démineur** — le classique : révéler les cases sans tomber sur une mine, en s'aidant des chiffres indiquant les mines adjacentes.
+- **2048** — fusionnez les tuiles de même valeur en glissant la grille (3×3, 4×4 ou 5×5) jusqu'à atteindre 2048.
+- **Picross** — remplissez la grille selon les indices numériques de chaque ligne/colonne pour révéler l'image cachée.
+- **Dédale** — reliez chaque paire de lettres identiques par un tracé continu qui remplit toute la grille (façon "Flow").
+- **Tectonic** — remplissez chaque zone irrégulière avec des chiffres consécutifs (1 à N), sans répétition entre cases adjacentes (même en diagonale).
+- **Rikudo** — placez les nombres 1 à N dans l'ordre sur une grille hexagonale, deux nombres consécutifs devant toujours être adjacents.
 
-- **5 niveaux de difficulté** :
-  - **Simple** : 35 cases vides (~43% de la grille remplie) - Idéal pour débuter
-  - **Normal** : 45 cases vides (~44% de la grille remplie) - Difficulté équilibrée
-  - **Expert** : 52 cases vides (~36% de la grille remplie) - Challenge élevé
-  - **Maître** : 58 cases vides (~28% de la grille remplie) - Pour les experts
-  - **Dieux du Sudoku** : 64 cases vides (~21% de la grille remplie) - Difficulté extrême
-- **Mode Notes** : Ajoutez des notes dans les cases pour marquer les possibilités
-- **Validation en temps réel** : Les erreurs sont mises en surbrillance automatiquement
-- **Système d'indices** : Obtenez de l'aide quand vous êtes bloqué
-- **Surbrillance intelligente** : Les lignes, colonnes et régions liées sont mises en évidence
+## Fonctionnalités communes
 
-### Fonctionnalités supplémentaires
-
-- **Chronomètre** : Suivez votre temps de résolution
-- **Statistiques complètes** :
-  - Historique des parties par niveau de difficulté
-  - Système de notation sur 10 (pondération : erreurs > indices > temps > pause)
-  - Temps moyen et meilleur temps
-  - Note moyenne et meilleure note
-  - Compteurs d'erreurs, d'indices et de notes utilisées
-  - Temps de pause enregistré
-- **Sauvegarde automatique** : Votre progression est sauvegardée dans le localStorage
-- **Mode sombre automatique** : S'adapte aux préférences système
-- **PWA** : Installez l'application sur votre appareil et jouez hors ligne
-- **Responsive** : Fonctionne sur desktop, tablette et mobile
+- **Chronomètre** avec pause/reprise
+- **Statistiques complètes par jeu et par difficulté** :
+  - Historique des parties
+  - Système de notation sur 10 (pondération : erreurs 40% > indices 30% > temps 20% > pause 10%)
+  - Temps moyen/meilleur temps, note moyenne/meilleure note
+  - Compteurs d'erreurs et d'indices
+- **Sauvegarde automatique** de la partie en cours dans le localStorage
+- **Mode sombre automatique** : s'adapte aux préférences système
+- **PWA** : installable, jouable hors ligne
+- **Responsive** : desktop, tablette et mobile
 
 ## Installation
 
@@ -50,38 +44,47 @@ pnpm run preview
 
 ## Comment jouer
 
-1. **Sélectionnez une difficulté** au démarrage
-2. **Cliquez sur une case** pour la sélectionner
-3. **Utilisez les chiffres 1-9** en bas de l'écran ou votre clavier pour remplir les cases
-4. **Mode Notes** : Activez le mode notes pour ajouter plusieurs petits chiffres dans une case
-5. **Effacer** : Supprimez le contenu d'une case
-6. **Indice** : Révèle la solution pour une case aléatoire (avec compteur)
+1. **Choisissez un jeu et une difficulté** au démarrage
+2. Chaque jeu a ses propres contrôles (voir en jeu), en général : sélection d'une case puis saisie via le clavier ou les boutons à l'écran
+3. **Nouvelle partie** / **Accueil** sont accessibles depuis l'en-tête de chaque jeu (avec confirmation si une partie est en cours)
+4. **Statistiques** : consultez votre historique et vos records depuis le menu principal
 
 ## Raccourcis clavier
 
-- `1-9` : Entrer un chiffre
-- `Backspace` ou `Delete` : Effacer la case sélectionnée
-- `N` : Basculer le mode notes
+Selon le jeu :
+
+- **Sudoku / Tango / Tectonic / Rikudo** : `1-9` pour entrer une valeur/un symbole, `Backspace`/`Delete` pour effacer, `N` pour basculer le mode notes (Sudoku)
+- **2048 / Dédale** : flèches directionnelles (`↑ ↓ ← →`) pour déplacer les tuiles / tracer un chemin
+- **Picross** : `Backspace`/`Delete` pour effacer une case
 
 ## Structure du projet
 
+Chaque jeu est isolé dans son propre contexte sous `src/contexts/<jeu>/`, en reprenant le même découpage (components / store / types / utils). Aucun contexte ne dépend d'un autre.
+
 ```
 src/
-├── components/          # Composants Vue
-│   ├── DifficultySelector.vue
-│   ├── GameControls.vue
-│   ├── GameHeader.vue
-│   ├── SudokuCell.vue
-│   └── SudokuGrid.vue
-├── stores/             # Store Pinia
-│   └── sudoku.ts
-├── types/              # Types TypeScript
-│   └── sudoku.ts
-├── utils/              # Utilitaires
-│   ├── sudokuGenerator.ts
-│   └── sudokuValidator.ts
-└── App.vue             # Composant principal
+├── App.vue                    # Switcher principal entre jeux + thème global
+├── main.ts                    # Bootstrap Vue + Pinia
+├── components/                # Composants communs à tous les jeux
+│   ├── DifficultySelector.vue #   Écran de démarrage (choix jeu + difficulté)
+│   ├── Statistics.vue         #   Statistiques agrégées de tous les jeux
+│   └── ConfirmModal.vue       #   Modale de confirmation générique
+└── contexts/
+    ├── sudoku/
+    │   ├── components/         # SudokuHeader, SudokuGrid, SudokuCell, SudokuControls
+    │   ├── store/sudoku.ts     # État du jeu (Pinia)
+    │   ├── types/sudoku.ts     # Enums, Grid/Cell, GameStats
+    │   └── utils/              # sudokuGenerator, sudokuValidator, sudokuScoreCalculator, sudokuStatsManager
+    ├── tango/         ...      # même découpage
+    ├── minesweeper/   ...
+    ├── game2048/      ...
+    ├── picross/       ...
+    ├── dedale/        ...
+    ├── tectonic/      ...
+    └── rikudo/        ...
 ```
+
+Pour ajouter un nouveau jeu en suivant ce découpage, voir le skill Claude Code `add-game` (`.claude/skills/add-game/SKILL.md`).
 
 ## Technologies utilisées
 
@@ -95,11 +98,11 @@ src/
 
 ### Génération de grilles
 
-L'algorithme de génération utilise le backtracking pour créer une grille valide complète, puis retire des cases en fonction de la difficulté tout en s'assurant qu'une solution unique existe.
+La plupart des jeux (Sudoku, Tango, Picross, Dédale, Tectonic, Rikudo, Démineur) génèrent leur grille via un algorithme dédié dans `utils/<jeu>Generator.ts`, avec pour les jeux de logique (Sudoku, Tango, Tectonic, Rikudo, Dédale) une vérification d'unicité de la solution par backtracking.
 
 ### Validation
 
-La validation vérifie en temps réel les conflits de lignes, colonnes et régions 3x3 selon les règles du Sudoku.
+Les jeux dont les règles nécessitent une vérification en temps réel des coups (Sudoku, Tango, Tectonic, Rikudo, Dédale) ont un `utils/<jeu>Validator.ts` dédié. Le Démineur et 2048 gèrent leur logique de coup directement dans leur store.
 
 ## Note sur les icônes PWA
 
