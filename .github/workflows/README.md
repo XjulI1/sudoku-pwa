@@ -23,11 +23,11 @@ Ce job est exécuté pour tous les événements (PR et push sur main).
 
 **Étapes**:
 1. Checkout du code
-2. Configuration de Node.js 20 avec cache yarn
-3. Installation des dépendances (`yarn install --frozen-lockfile`)
-4. Vérification des types (`yarn type-check`)
-5. Linting (`yarn lint`)
-6. Build de production (`yarn build`)
+2. Configuration de pnpm et de Node.js 20 avec cache pnpm
+3. Installation des dépendances (`pnpm i --frozen-lockfile`)
+4. Vérification des types (`pnpm run type-check`)
+5. Linting (`pnpm run lint`)
+6. Build de production (`pnpm run build`)
 7. Upload des artifacts de build (dossier `dist/`)
 
 **Artifacts**: Le dossier `dist/` est disponible pendant 7 jours pour les autres jobs.

@@ -36,16 +36,16 @@ Un jeu de Sudoku moderne développé avec Vue 3, TypeScript et configuré comme 
 
 ```bash
 # Installer les dépendances
-yarn install
+pnpm install
 
 # Lancer en mode développement
-yarn dev
+pnpm run dev
 
 # Build de production
-yarn build
+pnpm run build
 
 # Prévisualiser le build
-yarn preview
+pnpm run preview
 ```
 
 ## Comment jouer
@@ -119,13 +119,13 @@ Vous pouvez générer des icônes à partir de `public/icon.svg` en utilisant un
 ### Type-check
 
 ```bash
-yarn type-check
+pnpm run type-check
 ```
 
 ### Lint
 
 ```bash
-yarn lint
+pnpm run lint
 ```
 
 ## Licence

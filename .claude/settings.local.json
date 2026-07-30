@@ -2,9 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(tree:*)",
-      "Bash(yarn add:*)",
-      "Bash(yarn type-check:*)",
-      "Bash(yarn build:*)"
+      "Bash(pnpm add:*)",
+      "Bash(pnpm run type-check:*)",
+      "Bash(pnpm run build:*)",
+      "Bash(command -v gh)",
+      "Read(//opt/homebrew/bin/**)"
     ]
   }
 }

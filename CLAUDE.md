@@ -10,22 +10,22 @@ Sudoku PWA is a Progressive Web Application built with Vue 3 and TypeScript. It'
 
 ```bash
 # Development
-yarn dev              # Start dev server with hot reload
+pnpm run dev              # Start dev server with hot reload
 
 # Building
-yarn build            # Run type-check and build for production
-yarn build-only       # Build without type checking
-yarn preview          # Preview production build locally
+pnpm run build            # Run type-check and build for production
+pnpm run build-only       # Build without type checking
+pnpm run preview          # Preview production build locally
 
 # Code Quality
-yarn type-check       # Run Vue TypeScript compiler
-yarn lint             # Run both oxlint and eslint with auto-fix
-yarn lint:oxlint      # Fast linter (correctness checks)
-yarn lint:eslint      # Full ESLint with auto-fix
-yarn format           # Format code with Prettier
+pnpm run type-check       # Run Vue TypeScript compiler
+pnpm run lint             # Run both oxlint and eslint with auto-fix
+pnpm run lint:oxlint      # Fast linter (correctness checks)
+pnpm run lint:eslint      # Full ESLint with auto-fix
+pnpm run format           # Format code with Prettier
 
 # Testing
-yarn test:unit        # Run Vitest unit tests
+pnpm run test:unit        # Run Vitest unit tests
 ```
 
 ## Architecture
@@ -41,6 +41,7 @@ The entire game state is centralized in `src/stores/sudoku.ts` using Pinia's Com
 - **UI state**: selectedCell, noteMode, showErrors
 
 Key methods:
+
 - `newGame(difficulty)`: Generates puzzle via SudokuGenerator, initializes state
 - `selectCell(row, col)`: Updates selection and triggers cell highlighting
 - `handleNumberInput(num)`: Routes to either value or note based on noteMode
@@ -51,17 +52,20 @@ Key methods:
 ### Sudoku Algorithms
 
 **Generation** (`src/utils/sudokuGenerator.ts`):
+
 1. `generateComplete()`: Fills 9x9 grid using backtracking algorithm
 2. `removeNumbers()`: Removes cells based on difficulty while ensuring unique solution
 3. `hasUniqueSolution()`: Counts solutions (stops at 2) to verify puzzle validity
 
 Difficulty levels remove different amounts of cells:
+
 - SIMPLE: 35 cells (~43% filled)
 - NORMAL: 45 cells
 - EXPERT: 52 cells
 - MAITRE: 58 cells (~28% filled)
 
 **Validation** (`src/utils/sudokuValidator.ts`):
+
 - `isValidMove()`: Checks if number placement violates row/column/3x3 region rules
 - `getConflicts()`: Returns positions conflicting with a given cell
 - `isComplete()`: Compares grid against solution
@@ -102,6 +106,7 @@ Components use scoped CSS with these variables for consistent theming.
 ### PWA Configuration
 
 `vite.config.ts` configures vite-plugin-pwa:
+
 - Auto-updates service worker on new builds
 - Workbox precaches all JS/CSS/HTML/images
 - Manifest sets standalone display, portrait orientation, theme colors
@@ -113,6 +118,7 @@ Components use scoped CSS with these variables for consistent theming.
 The codebase uses strict TypeScript with non-null assertions (`!`) for array access where indices are guaranteed valid (e.g., `grid[row]![col]!` in 9x9 loops). This is safe because row/col are always 0-8.
 
 When adding code that accesses grids or arrays:
+
 - Use `!` assertions in controlled loops with known bounds
 - Validate bounds before accessing if indices come from user input
 - The `Difficulty` enum must be imported as value, not type-only
@@ -120,6 +126,7 @@ When adding code that accesses grids or arrays:
 ## Keyboard Support
 
 The app listens for keydown events in `GameControls.vue`:
+
 - Number keys 1-9: Enter value or note
 - Backspace/Delete: Clear selected cell
 - N key: Toggle note mode
