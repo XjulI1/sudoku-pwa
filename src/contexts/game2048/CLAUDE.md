@@ -35,6 +35,6 @@ Slide-and-merge 2048. No `Generator`/`Validator` files — everything (spawn, me
 
 ## Known quirks
 
-- **Possible stats double-count**: after winning, `continueGame()` sets status to `CONTINUE`. If the player then loses, the `LOST` guard checks `gameStatus.value !== WON` — which is true (status is `CONTINUE`, not `WON`) — so `saveGameStats(..., won: false, ...)` fires *again* for a game that already recorded a win. Worth fixing if stats accuracy matters (e.g. track "already saved" on the game session instead of gating on `WON`).
+- Stats are saved at most once per game session, tracked by the `hasSavedGameStats` ref (persisted via `saveGame`/`loadGame`, reset in `newGame`/`resetGame`) rather than by gating on `gameStatus !== WON`. This matters because after winning, `continueGame()` moves the status to `CONTINUE` — without the flag, a subsequent loss would re-trigger `saveGameStats(..., won: false, ...)` for a game that already recorded a win.
 - `clearAnimationFlags()` runs at the very start of `move()`, so `isNew`/`mergedFrom` only ever reflect the most recent move.
 - `canMove()` only checks right/down neighbors — correct today since equality is symmetric, but note this if the function is ever refactored.

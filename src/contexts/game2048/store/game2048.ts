@@ -39,6 +39,7 @@ export const useGame2048Store = defineStore('game2048', () => {
   const totalPauseTime = ref(0)
   const lastPauseStart = ref<number | null>(null)
   const lastMoveScore = ref(0)
+  const hasSavedGameStats = ref(false)
 
   // Timer
   let timerInterval: number | null = null
@@ -278,14 +279,17 @@ export const useGame2048Store = defineStore('game2048', () => {
         gameStatus.value = Game2048Status.WON
         stopTimer()
 
-        Game2048StatsManager.saveGameStats(
-          gridSize.value,
-          score.value,
-          highestTile.value,
-          elapsedTime.value,
-          true,
-          totalPauseTime.value,
-        )
+        if (!hasSavedGameStats.value) {
+          hasSavedGameStats.value = true
+          Game2048StatsManager.saveGameStats(
+            gridSize.value,
+            score.value,
+            highestTile.value,
+            elapsedTime.value,
+            true,
+            totalPauseTime.value,
+          )
+        }
       }
 
       // Vérifier game over
@@ -294,14 +298,19 @@ export const useGame2048Store = defineStore('game2048', () => {
           gameStatus.value = Game2048Status.LOST
           stopTimer()
 
-          Game2048StatsManager.saveGameStats(
-            gridSize.value,
-            score.value,
-            highestTile.value,
-            elapsedTime.value,
-            false,
-            totalPauseTime.value,
-          )
+          // hasSavedGameStats est déjà vrai si la partie a été gagnée avant d'être
+          // poursuivie via continueGame() — on ne veut pas la recompter comme perdue.
+          if (!hasSavedGameStats.value) {
+            hasSavedGameStats.value = true
+            Game2048StatsManager.saveGameStats(
+              gridSize.value,
+              score.value,
+              highestTile.value,
+              elapsedTime.value,
+              false,
+              totalPauseTime.value,
+            )
+          }
         }
       }
 
@@ -376,6 +385,7 @@ export const useGame2048Store = defineStore('game2048', () => {
     totalPauseTime.value = 0
     lastPauseStart.value = null
     lastMoveScore.value = 0
+    hasSavedGameStats.value = false
     nextTileId = 1
 
     // Charger le meilleur score
@@ -465,6 +475,7 @@ export const useGame2048Store = defineStore('game2048', () => {
       elapsedTime: elapsedTime.value,
       highestTile: highestTile.value,
       totalPauseTime: totalPauseTime.value,
+      hasSavedGameStats: hasSavedGameStats.value,
       nextTileId,
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -485,6 +496,7 @@ export const useGame2048Store = defineStore('game2048', () => {
       elapsedTime.value = state.elapsedTime
       highestTile.value = state.highestTile
       totalPauseTime.value = state.totalPauseTime || 0
+      hasSavedGameStats.value = state.hasSavedGameStats ?? false
       nextTileId = state.nextTileId || 1
       isPaused.value = false
       lastPauseStart.value = null
@@ -533,6 +545,7 @@ export const useGame2048Store = defineStore('game2048', () => {
     totalPauseTime.value = 0
     lastPauseStart.value = null
     lastMoveScore.value = 0
+    hasSavedGameStats.value = false
     localStorage.removeItem(STORAGE_KEY)
   }
 
