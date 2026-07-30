@@ -6,12 +6,14 @@ import { MinesweeperDifficulty } from '@/types/minesweeper'
 import { Game2048GridSize } from '@/types/game2048'
 import { PicrossDifficulty } from '@/types/picross'
 import { DedaleDifficulty } from '@/types/dedale'
+import { TectonicDifficulty } from '@/types/tectonic'
 import { StatsManager } from '@/utils/statsManager'
 import { TangoStatsManager } from '@/utils/tangoStatsManager'
 import { MinesweeperStatsManager } from '@/utils/minesweeperStatsManager'
 import { Game2048StatsManager } from '@/utils/game2048StatsManager'
 import { PicrossStatsManager } from '@/utils/picrossStatsManager'
 import { DedaleStatsManager } from '@/utils/dedaleStatsManager'
+import { TectonicStatsManager } from '@/utils/tectonicStatsManager'
 
 defineOptions({
   name: 'GameStatistics'
@@ -21,7 +23,7 @@ defineEmits<{
   close: []
 }>()
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale' | 'tectonic'
 
 const selectedGameType = ref<GameType>('sudoku')
 
@@ -65,6 +67,13 @@ const dedaleDifficulties = [
   { value: DedaleDifficulty.DIFFICILE, label: 'Difficile' },
 ]
 
+const tectonicDifficulties = [
+  { value: TectonicDifficulty.FACILE, label: 'Facile' },
+  { value: TectonicDifficulty.MOYEN, label: 'Moyen' },
+  { value: TectonicDifficulty.DIFFICILE, label: 'Difficile' },
+  { value: TectonicDifficulty.EXPERT, label: 'Expert' },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6' },
   { value: GridSize.NINE, label: '9x9' },
@@ -76,6 +85,7 @@ const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDiff
 const selected2048GridSize = ref<Game2048GridSize>(Game2048GridSize.FOUR)
 const selectedPicrossDifficulty = ref<PicrossDifficulty>(PicrossDifficulty.EASY)
 const selectedDedaleDifficulty = ref<DedaleDifficulty>(DedaleDifficulty.MOYEN)
+const selectedTectonicDifficulty = ref<TectonicDifficulty>(TectonicDifficulty.FACILE)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const totalGamesPlayed = computed(() => {
@@ -89,8 +99,10 @@ const totalGamesPlayed = computed(() => {
     return Game2048StatsManager.getTotalGamesPlayed()
   } else if (selectedGameType.value === 'picross') {
     return PicrossStatsManager.getTotalGamesPlayed()
-  } else {
+  } else if (selectedGameType.value === 'dedale') {
     return DedaleStatsManager.getTotalGamesPlayed()
+  } else {
+    return TectonicStatsManager.getTotalGamesPlayed()
   }
 })
 
@@ -105,8 +117,10 @@ const bestScore = computed(() => {
     return Game2048StatsManager.getBestScore()
   } else if (selectedGameType.value === 'picross') {
     return PicrossStatsManager.getBestScore()
-  } else {
+  } else if (selectedGameType.value === 'dedale') {
     return DedaleStatsManager.getBestScore()
+  } else {
+    return TectonicStatsManager.getBestScore()
   }
 })
 
@@ -121,8 +135,10 @@ const currentStats = computed(() => {
     return Game2048StatsManager.loadDifficultyStats(selected2048GridSize.value)
   } else if (selectedGameType.value === 'picross') {
     return PicrossStatsManager.loadDifficultyStats(selectedPicrossDifficulty.value)
-  } else {
+  } else if (selectedGameType.value === 'dedale') {
     return DedaleStatsManager.loadDifficultyStats(selectedDedaleDifficulty.value)
+  } else {
+    return TectonicStatsManager.loadDifficultyStats(selectedTectonicDifficulty.value)
   }
 })
 
@@ -142,6 +158,8 @@ const difficulties = computed(() => {
     return picrossDifficulties
   } else if (selectedGameType.value === 'dedale') {
     return dedaleDifficulties
+  } else if (selectedGameType.value === 'tectonic') {
+    return tectonicDifficulties
   } else {
     return game2048GridSizes
   }
@@ -159,11 +177,13 @@ const currentDifficulty = computed({
       return selectedPicrossDifficulty.value
     } else if (selectedGameType.value === 'dedale') {
       return selectedDedaleDifficulty.value
+    } else if (selectedGameType.value === 'tectonic') {
+      return selectedTectonicDifficulty.value
     } else {
       return selected2048GridSize.value
     }
   },
-  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty | TectonicDifficulty) => {
     if (selectedGameType.value === 'sudoku') {
       selectedDifficulty.value = value as Difficulty
     } else if (selectedGameType.value === 'tango') {
@@ -174,6 +194,8 @@ const currentDifficulty = computed({
       selectedPicrossDifficulty.value = value as PicrossDifficulty
     } else if (selectedGameType.value === 'dedale') {
       selectedDedaleDifficulty.value = value as DedaleDifficulty
+    } else if (selectedGameType.value === 'tectonic') {
+      selectedTectonicDifficulty.value = value as TectonicDifficulty
     } else {
       selected2048GridSize.value = value as Game2048GridSize
     }
@@ -193,7 +215,7 @@ const getGridSizeCount = (gridSize: GridSize): number => {
 }
 
 // Compte le nombre de parties pour une difficulté et taille données
-const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty): number => {
+const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty | TectonicDifficulty): number => {
   if (selectedGameType.value === 'sudoku') {
     const stats = StatsManager.loadDifficultyStats(difficulty as Difficulty, selectedGridSize.value)
     return stats?.gamesPlayed || 0
@@ -208,6 +230,9 @@ const getDifficultyCount = (difficulty: Difficulty | TangoDifficulty | Minesweep
     return stats?.gamesPlayed || 0
   } else if (selectedGameType.value === 'dedale') {
     const stats = DedaleStatsManager.loadDifficultyStats(difficulty as DedaleDifficulty)
+    return stats?.gamesPlayed || 0
+  } else if (selectedGameType.value === 'tectonic') {
+    const stats = TectonicStatsManager.loadDifficultyStats(difficulty as TectonicDifficulty)
     return stats?.gamesPlayed || 0
   } else {
     const stats = Game2048StatsManager.loadDifficultyStats(difficulty as Game2048GridSize)
@@ -300,6 +325,13 @@ function getScoreClass(score: number): string {
         >
           🧵 Dédale
           <span class="count">({{ selectedGameType === 'dedale' ? totalGamesPlayed : DedaleStatsManager.getTotalGamesPlayed() }})</span>
+        </button>
+        <button
+          :class="{ active: selectedGameType === 'tectonic' }"
+          @click="selectedGameType = 'tectonic'"
+        >
+          🧱 Tectonic
+          <span class="count">({{ selectedGameType === 'tectonic' ? totalGamesPlayed : TectonicStatsManager.getTotalGamesPlayed() }})</span>
         </button>
       </div>
 

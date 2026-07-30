@@ -6,6 +6,7 @@ import { useMinesweeperStore } from '@/stores/minesweeper'
 import { useGame2048Store } from '@/stores/game2048'
 import { usePicrossStore } from '@/stores/picross'
 import { useDedaleStore } from '@/stores/dedale'
+import { useTectonicStore } from '@/stores/tectonic'
 import DifficultySelector from '@/components/DifficultySelector.vue'
 import GameHeader from '@/components/GameHeader.vue'
 import SudokuGrid from '@/components/SudokuGrid.vue'
@@ -25,10 +26,13 @@ import PicrossControls from '@/components/PicrossControls.vue'
 import DedaleHeader from '@/components/DedaleHeader.vue'
 import DedaleGrid from '@/components/DedaleGrid.vue'
 import DedaleControls from '@/components/DedaleControls.vue'
+import TectonicHeader from '@/components/TectonicHeader.vue'
+import TectonicGrid from '@/components/TectonicGrid.vue'
+import TectonicControls from '@/components/TectonicControls.vue'
 import Statistics from '@/components/Statistics.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale' | 'tectonic'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
@@ -36,6 +40,7 @@ const minesweeperStore = useMinesweeperStore()
 const game2048Store = useGame2048Store()
 const picrossStore = usePicrossStore()
 const dedaleStore = useDedaleStore()
+const tectonicStore = useTectonicStore()
 const currentGameType = ref<GameType>('sudoku')
 const showMenu = ref(false)
 const showStats = ref(false)
@@ -53,8 +58,10 @@ const hasActiveGame = computed(() => {
     return game2048Store.grid.length > 0
   } else if (currentGameType.value === 'picross') {
     return picrossStore.grid.length > 0
-  } else {
+  } else if (currentGameType.value === 'dedale') {
     return dedaleStore.grid.length > 0
+  } else {
+    return tectonicStore.grid.length > 0
   }
 })
 
@@ -66,6 +73,7 @@ onMounted(() => {
   const game2048Loaded = game2048Store.loadGame()
   const picrossLoaded = picrossStore.loadGame()
   const dedaleLoaded = dedaleStore.loadGame()
+  const tectonicLoaded = tectonicStore.loadGame()
 
   if (sudokuLoaded) {
     currentGameType.value = 'sudoku'
@@ -84,6 +92,9 @@ onMounted(() => {
     showMenu.value = false
   } else if (dedaleLoaded) {
     currentGameType.value = 'dedale'
+    showMenu.value = false
+  } else if (tectonicLoaded) {
+    currentGameType.value = 'tectonic'
     showMenu.value = false
   } else {
     showMenu.value = true
@@ -124,8 +135,10 @@ const restartCurrentGame = () => {
     game2048Store.newGame(game2048Store.gridSize)
   } else if (currentGameType.value === 'picross') {
     picrossStore.newGame(picrossStore.difficulty)
-  } else {
+  } else if (currentGameType.value === 'dedale') {
     dedaleStore.newGame(dedaleStore.difficulty)
+  } else {
+    tectonicStore.newGame(tectonicStore.difficulty)
   }
 }
 
@@ -140,8 +153,10 @@ const goHome = () => {
     game2048Store.resetGame()
   } else if (currentGameType.value === 'picross') {
     picrossStore.resetGame()
-  } else {
+  } else if (currentGameType.value === 'dedale') {
     dedaleStore.resetGame()
+  } else {
+    tectonicStore.resetGame()
   }
   showMenu.value = true
 }
@@ -222,10 +237,17 @@ const closeStats = () => {
       </template>
 
       <!-- Dédale Game -->
-      <template v-else>
+      <template v-else-if="currentGameType === 'dedale'">
         <DedaleHeader @new-game="requestNewGame" @go-home="requestGoHome" />
         <DedaleGrid />
         <DedaleControls />
+      </template>
+
+      <!-- Tectonic Game -->
+      <template v-else>
+        <TectonicHeader @new-game="requestNewGame" @go-home="requestGoHome" />
+        <TectonicGrid />
+        <TectonicControls />
       </template>
     </div>
 

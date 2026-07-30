@@ -6,12 +6,15 @@ import { MinesweeperDifficulty } from '@/types/minesweeper'
 import { Game2048GridSize } from '@/types/game2048'
 import { PicrossDifficulty } from '@/types/picross'
 import { DedaleDifficulty } from '@/types/dedale'
+import { TectonicDifficulty } from '@/types/tectonic'
 import { useSudokuStore } from '@/stores/sudoku'
 import { useTangoStore } from '@/stores/tango'
 import { useMinesweeperStore } from '@/stores/minesweeper'
 import { useGame2048Store } from '@/stores/game2048'
 import { usePicrossStore } from '@/stores/picross'
 import { useDedaleStore } from '@/stores/dedale'
+import { useTectonicStore } from '@/stores/tectonic'
+import { TectonicGenerator } from '@/utils/tectonicGenerator'
 
 const sudokuStore = useSudokuStore()
 const tangoStore = useTangoStore()
@@ -19,8 +22,9 @@ const minesweeperStore = useMinesweeperStore()
 const game2048Store = useGame2048Store()
 const picrossStore = usePicrossStore()
 const dedaleStore = useDedaleStore()
+const tectonicStore = useTectonicStore()
 
-type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale'
+type GameType = 'sudoku' | 'tango' | 'minesweeper' | 'game2048' | 'picross' | 'dedale' | 'tectonic'
 
 const props = withDefaults(defineProps<{
   initialGameType?: GameType
@@ -39,6 +43,7 @@ const selectedMinesweeperDifficulty = ref<MinesweeperDifficulty>(MinesweeperDiff
 const selected2048GridSize = ref<Game2048GridSize>(Game2048GridSize.FOUR)
 const selectedPicrossDifficulty = ref<PicrossDifficulty>(PicrossDifficulty.EASY)
 const selectedDedaleDifficulty = ref<DedaleDifficulty>(DedaleDifficulty.MOYEN)
+const selectedTectonicDifficulty = ref<TectonicDifficulty>(TectonicDifficulty.FACILE)
 const selectedGridSize = ref<GridSize>(GridSize.NINE)
 
 const emit = defineEmits<{
@@ -53,6 +58,7 @@ const gameTypes = [
   { value: 'game2048' as GameType, label: '2048', icon: '🎯', description: 'Fusionnez les tuiles' },
   { value: 'picross' as GameType, label: 'Picross', icon: '🧩', description: 'Puzzle de logique visuel' },
   { value: 'dedale' as GameType, label: 'Dédale', icon: '🧵', description: 'Reliez les paires de lettres' },
+  { value: 'tectonic' as GameType, label: 'Tectonic', icon: '🧱', description: 'Zones à remplir sans doublon adjacent' },
 ]
 
 const sudokuDifficulties = [
@@ -99,6 +105,18 @@ const dedaleDifficulties = [
   { value: DedaleDifficulty.DIFFICILE, label: 'Difficile', description: 'Grille 10x10, 12 paires' },
 ]
 
+const tectonicDifficultyLabel = (difficulty: TectonicDifficulty): string => {
+  const config = TectonicGenerator.getDifficultyConfig(difficulty)
+  return `Grille ${config.rows}x${config.cols}`
+}
+
+const tectonicDifficulties = [
+  { value: TectonicDifficulty.FACILE, label: 'Facile', description: tectonicDifficultyLabel(TectonicDifficulty.FACILE) },
+  { value: TectonicDifficulty.MOYEN, label: 'Moyen', description: tectonicDifficultyLabel(TectonicDifficulty.MOYEN) },
+  { value: TectonicDifficulty.DIFFICILE, label: 'Difficile', description: tectonicDifficultyLabel(TectonicDifficulty.DIFFICILE) },
+  { value: TectonicDifficulty.EXPERT, label: 'Expert', description: tectonicDifficultyLabel(TectonicDifficulty.EXPERT) },
+]
+
 const gridSizes = [
   { value: GridSize.SIX, label: '6x6', description: 'Grille 6x6 (2x3 régions)' },
   { value: GridSize.NINE, label: '9x9', description: 'Grille classique 9x9 (3x3 régions)' },
@@ -110,6 +128,7 @@ const currentDifficulties = computed(() => {
   if (selectedGameType.value === 'minesweeper') return minesweeperDifficulties
   if (selectedGameType.value === 'picross') return picrossDifficulties
   if (selectedGameType.value === 'dedale') return dedaleDifficulties
+  if (selectedGameType.value === 'tectonic') return tectonicDifficulties
   return game2048GridSizes
 })
 
@@ -120,9 +139,10 @@ const selectedDifficulty = computed({
     if (selectedGameType.value === 'minesweeper') return selectedMinesweeperDifficulty.value
     if (selectedGameType.value === 'picross') return selectedPicrossDifficulty.value
     if (selectedGameType.value === 'dedale') return selectedDedaleDifficulty.value
+    if (selectedGameType.value === 'tectonic') return selectedTectonicDifficulty.value
     return selected2048GridSize.value
   },
-  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty) => {
+  set: (value: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty | TectonicDifficulty) => {
     if (selectedGameType.value === 'sudoku') {
       selectedSudokuDifficulty.value = value as Difficulty
     } else if (selectedGameType.value === 'tango') {
@@ -133,13 +153,15 @@ const selectedDifficulty = computed({
       selectedPicrossDifficulty.value = value as PicrossDifficulty
     } else if (selectedGameType.value === 'dedale') {
       selectedDedaleDifficulty.value = value as DedaleDifficulty
+    } else if (selectedGameType.value === 'tectonic') {
+      selectedTectonicDifficulty.value = value as TectonicDifficulty
     } else {
       selected2048GridSize.value = value as Game2048GridSize
     }
   }
 })
 
-const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty) => {
+const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | MinesweeperDifficulty | Game2048GridSize | PicrossDifficulty | DedaleDifficulty | TectonicDifficulty) => {
   if (selectedGameType.value === 'sudoku') {
     return selectedSudokuDifficulty.value === diffValue
   } else if (selectedGameType.value === 'tango') {
@@ -150,6 +172,8 @@ const isDifficultySelected = (diffValue: Difficulty | TangoDifficulty | Mineswee
     return selectedPicrossDifficulty.value === diffValue
   } else if (selectedGameType.value === 'dedale') {
     return selectedDedaleDifficulty.value === diffValue
+  } else if (selectedGameType.value === 'tectonic') {
+    return selectedTectonicDifficulty.value === diffValue
   } else {
     return selected2048GridSize.value === diffValue
   }
@@ -166,6 +190,8 @@ const startNewGame = () => {
     picrossStore.newGame(selectedPicrossDifficulty.value)
   } else if (selectedGameType.value === 'dedale') {
     dedaleStore.newGame(selectedDedaleDifficulty.value)
+  } else if (selectedGameType.value === 'tectonic') {
+    tectonicStore.newGame(selectedTectonicDifficulty.value)
   } else {
     game2048Store.newGame(selected2048GridSize.value)
   }
